@@ -1,7 +1,16 @@
-import logging
+# Ensure app is running from the right directory (dev and prod)
 import os
-import time
 from pathlib import Path
+
+os.chdir(str(Path(__file__).parent))
+current_dir_path = Path(os.getcwd())
+if str(current_dir_path).endswith("cart_player"):
+    os.chdir(str(current_dir_path.parent))
+
+# ---
+
+import logging
+import time
 from threading import Thread
 
 from cart_player import config
@@ -34,12 +43,6 @@ def interrupt_app_event_reading(stop):
 
 
 if __name__ == "__main__":
-    # Ensure app is running from the right directory (dev and prod)
-    os.chdir(str(Path(__file__).parent))
-    current_dir_path = Path(os.getcwd())
-    if str(current_dir_path).endswith("cart_player"):
-        os.chdir(str(current_dir_path.parent))
-
     # Workers for broker executed by child threads
     n_workers = 4
     stop_threads = False
