@@ -97,7 +97,7 @@ conda config --env --set subdir osx-64
 conda install python=3.9 -y
 
 # Build app
-./scripts/build/osx_build.sh
+./scripts/osx_build.sh
 
 # Cleanup
 conda deactivate
@@ -112,7 +112,7 @@ python -m venv cart_player_build
 .\cart_player_build\Scripts\activate
 
 # Build app
-.\scripts\build\windows_build.ps1
+.\scripts\windows_build.ps1
 
 # Cleanup
 deactivate
