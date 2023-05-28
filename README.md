@@ -97,7 +97,7 @@ conda config --env --set subdir osx-64
 conda install python=3.9 -y
 
 # Build app
-./scripts/build/osx_build.sh
+./scripts/osx_build.sh
 
 # Cleanup
 conda deactivate

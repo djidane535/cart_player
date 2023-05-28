@@ -4,6 +4,7 @@ import os
 import sys
 
 from setuptools import setup
+
 from version import __version__
 
 # Check that the Python version is supported

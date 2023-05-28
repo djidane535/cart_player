@@ -3,7 +3,7 @@ from datetime import datetime
 
 from .settings import BASE_APP_PATH
 
- 
+
 # Stdout handler
 class StdoutHandler(logging.Handler):
     def __init__(self, *args, **kwargs):

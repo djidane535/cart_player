@@ -36,8 +36,8 @@ from cart_player.frontend.domain.events import (
 )
 from cart_player.frontend.domain.ports import App, AppStatus, LocalMemoryConfigurable
 from cart_player.frontend.resources import app_icon_fullsize_filepath
-
 from cart_player.settings import BASE_APP_PATH
+
 from .utils import (
     DATA_WINDOW_TITLE,
     GAME_IMAGE_SQUARE_SIZE,
