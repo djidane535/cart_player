@@ -129,4 +129,4 @@ dmypy.json
 .pyre/
 settings.conf
 .deprecated
-memory
+/memory
