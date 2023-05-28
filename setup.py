@@ -4,8 +4,7 @@ import os
 import sys
 
 from setuptools import setup
-
-from _version import __version__
+from version import __version__
 
 # Check that the Python version is supported
 if sys.version_info < (3, 9) or sys.version_info >= (4,):
