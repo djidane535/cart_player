@@ -31,9 +31,13 @@ class SetupGameFileAndSaveFileForPlayingHandler(Handler):
         if not game_data_name:
             return
 
-        target_path.mkdir(parents=True, exist_ok=True)
         game_data = self._memory.get_by_name(game_data_name, game_data_type, with_content=True)
-        target_filepath = target_path / ("GAME" + game_data.extension)
+        if not game_data or not game_data.content:
+            return
+
+        target_path.mkdir(parents=True, exist_ok=True)
+        extension = ".sav" if game_data_type == GameDataType.SAVE else game_data.extension
+        target_filepath = target_path / ("GAME" + extension)
         self._try_delete(target_filepath)
 
         if game_data and game_data.content:

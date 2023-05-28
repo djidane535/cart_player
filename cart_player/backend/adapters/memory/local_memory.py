@@ -189,7 +189,8 @@ class LocalMemory(Memory):
         md5 = LocalMemory._get_md5(content)
         metadata = data.get(md5, None)
 
-        return GameData(name=name, date=date, content=content, type=type, extension=file.suffix, metadata=metadata)
+        extension = "".join(file.suffixes)
+        return GameData(name=name, date=date, content=content, type=type, extension=extension, metadata=metadata)
 
     def get_all(
         self,
@@ -231,13 +232,14 @@ class LocalMemory(Memory):
             metadata = data.get(md5, None)
 
             # Add GameData to list
+            extension = "".join(f.suffixes)
             game_data_list.append(
                 GameData(
                     name=f.name,
                     date=datetime.fromtimestamp(f.stat().st_mtime),
                     content=content if with_content else None,
                     type=type,
-                    extension=f.suffix,
+                    extension=extension,
                     metadata=metadata,
                 )
             )
@@ -360,9 +362,10 @@ class LocalMemory(Memory):
             FileNotFoundError: If file does not exist.
         """
         increment = LocalMemory._get_increment(filepath)
+        extension = "".join(filepath.suffixes)
         shutil.move(
             str(filepath),
-            str(filepath.with_suffix(filepath.suffix + f".{increment}")),
+            str(filepath.with_suffix(extension + f".{increment}")),
         )
 
     @staticmethod
@@ -376,10 +379,11 @@ class LocalMemory(Memory):
             FileNotFoundError: If the file is not historized.
         """
         increment = LocalMemory._get_increment(filepath)
+        extension = "".join(filepath.suffixes)
         if increment <= 1:
             raise FileNotFoundError("File is not historized.")
         shutil.move(
-            str(filepath.with_suffix(filepath.suffix + f".{increment - 1}")),
+            str(filepath.with_suffix(extension + f".{increment - 1}")),
             str(filepath),
         )
 
@@ -397,7 +401,8 @@ class LocalMemory(Memory):
             FileNotFoundError: If file does not exist.
         """
         increment = 1
-        while filepath.with_suffix(filepath.suffix + f".{increment}").exists():
+        extension = "".join(filepath.suffixes)
+        while filepath.with_suffix(extension + f".{increment}").exists():
             increment += 1
         return increment
 
@@ -492,9 +497,10 @@ class LocalMemory(Memory):
             RuntimeError: If an error occurs while processing the content.
         """
         try:
-            if filepath.suffix == ".json":
+            extension = "".join(filepath.suffixes)
+            if extension == ".json":
                 return json.dumps(pickle.loads(content)), False
-            elif filepath.suffix == ".png":
+            elif extension == ".png":
                 return base64.b64decode(content), True
             else:
                 return content, True
