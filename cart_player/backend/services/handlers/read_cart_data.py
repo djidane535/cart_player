@@ -42,7 +42,18 @@ class ReadCartDataHandler(Handler):
             if cmd.raise_error:
                 raise e
 
-            logger.info(f"An exception has been ignored: {e}", exc_info=True)
+            # Publish CartDataReadEvent
+            evt = self._build_cart_data_read_event(
+                cmd=cmd,
+                success=False,
+                cart_info=None,
+                game_data_list=None,
+                game_metadata=None,
+                game_image=None,
+            )
+            self._publish(evt)
+
+            logger.error(f"An exception has occurred: {e}", exc_info=True)
 
     def _handle_command(self, cmd: ReadCartDataCommand):
         # CartInfo

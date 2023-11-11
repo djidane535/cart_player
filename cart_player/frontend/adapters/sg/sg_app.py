@@ -567,9 +567,9 @@ class SgApp(App, LocalMemoryConfigurable):
             layout=PopUpWarningWindowLayoutBuilder.build(
                 wrap_text(message, POP_UP_MESSAGE_WIDTH, 100, True),
                 close_button_name,
-                icon=self._icon,
             ),
             modal=True,
+            icon=self._icon,
             keep_on_top=True,
         )
         while True:
@@ -580,23 +580,27 @@ class SgApp(App, LocalMemoryConfigurable):
 
     def open_pop_up_error_window(self, message: str, close_app: bool):
         """Open a pop-up window for displaying an error."""
-        close_button_name = "Close"
-        popup_window = sg.Window(
-            "ERROR",
-            layout=PopUpErrorWindowLayoutBuilder.build(
-                wrap_text(message, POP_UP_MESSAGE_WIDTH, 100, True),
-                close_button_name,
+        try:
+            close_button_name = "Close"
+            popup_window = sg.Window(
+                "ERROR",
+                layout=PopUpErrorWindowLayoutBuilder.build(
+                    wrap_text(message, POP_UP_MESSAGE_WIDTH, 100, True),
+                    close_button_name,
+                ),
+                modal=True,
                 icon=self._icon,
-            ),
-            modal=True,
-            keep_on_top=True,
-        )
-        while True:
-            event, _ = popup_window.read()
-            if event == close_button_name or event == sg.WIN_CLOSED:
-                break
-        popup_window.close()
-        self._close_app = close_app
+                keep_on_top=True,
+            )
+            while True:
+                event, _ = popup_window.read()
+                if event == close_button_name or event == sg.WIN_CLOSED:
+                    break
+            popup_window.close()
+        except Exception:
+            logger.critical(f"Unexpected error occurred while opening pop-up error window.", exc_info=True)
+        finally:
+            self._close_app = close_app
 
     @lockedmethod
     def restore_previous_window(
