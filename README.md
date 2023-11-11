@@ -112,7 +112,7 @@ python -m venv cart_player_build
 .\cart_player_build\Scripts\activate
 
 # Build app
-.\scripts\build\windows_build.ps1
+.\scripts\windows_build.ps1
 
 # Cleanup
 deactivate
