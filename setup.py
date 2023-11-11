@@ -21,7 +21,7 @@ AUTHOR = "djidane535"
 REQUIRES_PYTHON = ">=3.9, <4"
 
 REQUIRED = [
-    "Pillow==9.3.*",
+    "Pillow==10.1.*",
     "PySimpleGUI==4.60.*",
     "easysettings==4.0.*",
     "pydantic==1.10.*",
