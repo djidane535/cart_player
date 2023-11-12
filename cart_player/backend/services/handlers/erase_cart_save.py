@@ -34,7 +34,7 @@ class EraseCartSaveHandler(Handler):
             self._publish(CartSaveErasedEvent(success=False))
         else:
             self._publish(
-                CartSaveErasedEvent(  # TODO
+                CartSaveErasedEvent(
                     success=True,
                     cart_info=CartInfoDTO(
                         title=cart_info.title,

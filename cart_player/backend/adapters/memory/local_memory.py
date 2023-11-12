@@ -189,7 +189,7 @@ class LocalMemory(Memory):
         md5 = LocalMemory._get_md5(content)
         metadata = data.get(md5, None)
 
-        extension = "".join(file.suffixes)
+        extension = file.suffix
         return GameData(name=name, date=date, content=content, type=type, extension=extension, metadata=metadata)
 
     def get_all(
@@ -232,7 +232,7 @@ class LocalMemory(Memory):
             metadata = data.get(md5, None)
 
             # Add GameData to list
-            extension = "".join(f.suffixes)
+            extension = f.suffix
             game_data_list.append(
                 GameData(
                     name=f.name,
@@ -362,7 +362,7 @@ class LocalMemory(Memory):
             FileNotFoundError: If file does not exist.
         """
         increment = LocalMemory._get_increment(filepath)
-        extension = "".join(filepath.suffixes)
+        extension = filepath.suffix
         shutil.move(
             str(filepath),
             str(filepath.with_suffix(extension + f".{increment}")),
@@ -379,7 +379,7 @@ class LocalMemory(Memory):
             FileNotFoundError: If the file is not historized.
         """
         increment = LocalMemory._get_increment(filepath)
-        extension = "".join(filepath.suffixes)
+        extension = filepath.suffix
         if increment <= 1:
             raise FileNotFoundError("File is not historized.")
         shutil.move(
@@ -401,7 +401,7 @@ class LocalMemory(Memory):
             FileNotFoundError: If file does not exist.
         """
         increment = 1
-        extension = "".join(filepath.suffixes)
+        extension = filepath.suffix
         while filepath.with_suffix(extension + f".{increment}").exists():
             increment += 1
         return increment
@@ -497,7 +497,7 @@ class LocalMemory(Memory):
             RuntimeError: If an error occurs while processing the content.
         """
         try:
-            extension = "".join(filepath.suffixes)
+            extension = filepath.suffix
             if extension == ".json":
                 return json.dumps(pickle.loads(content)), False
             elif extension == ".png":

@@ -54,7 +54,7 @@ class LibretroImageLibrary(GameImageLibrary):
         except Exception:
             try:
                 Image.open(BytesIO(base64.b64decode(content)))
-                return content
+                return base64.b64decode(content)
             except Exception:
                 return None
 

@@ -12,7 +12,7 @@ from cart_player.backend.adapters.game_library import (
     LibretroImageLibrary,
     LibretroMetadataLibrary,
 )
-from cart_player.backend.adapters.memory import LocalMemory
+from cart_player.backend.adapters.memory import DummyMemory, LocalMemory
 from cart_player.backend.domain.models import CartInfo
 from cart_player.backend.domain.ports import GameLibrary
 from cart_player.backend.resources.mock import (
@@ -42,6 +42,7 @@ from .logging_handlers import logging_handlers
 from .settings import (
     APP_NAME,
     SETTINGS_MEMORY_PATH,
+    SETTINGS_NO_MEMORY,
     SETTINGS_RESET_MEMORY,
     SETTINGS_USE_CART_FLASHER_MOCK,
     SETTINGS_USE_IMAGE_LIBRARIES_MOCK,
@@ -87,12 +88,9 @@ else:
     cart_flasher = MockCartFlasher(carts)
 
 # Memory
-if not cli_settings.get(SETTINGS_USE_MEMORY_MOCK):
-    memory = LocalMemory(app.memory_path)
-    if cli_settings.get(SETTINGS_RESET_MEMORY):
-        shutil.rmtree(memory.root_path, ignore_errors=True)
-    memory.configure()
-else:
+if cli_settings.get(SETTINGS_NO_MEMORY):
+    memory = DummyMemory()
+elif cli_settings.get(SETTINGS_USE_MEMORY_MOCK):
     memory = MockMemory(
         app.memory_path,
         entries=[
@@ -101,6 +99,11 @@ else:
             if cart_info
         ],
     )
+else:
+    memory = LocalMemory(app.memory_path)
+    if cli_settings.get(SETTINGS_RESET_MEMORY):
+        shutil.rmtree(memory.root_path, ignore_errors=True)
+    memory.configure()
 
 # GameLibrary
 metadata_libraries = []
