@@ -14,6 +14,7 @@ import time
 from threading import Thread
 
 from cart_player import config
+from cart_player.backend.domain.commands import ReadCartDataCommand
 from cart_player.frontend.domain.ports import AppStatus
 from cart_player.logging_handlers import logging_shutdown
 
@@ -49,6 +50,9 @@ if __name__ == "__main__":
     broker_workers = [Thread(target=consume_messages, args=(i, lambda: stop_threads)) for i in range(n_workers)]
     broker_workers.append(Thread(target=interrupt_app_event_reading, args=(lambda: stop_threads,)))
     [broker_worker.start() for broker_worker in broker_workers]
+
+    # Refesh on startup
+    config.broker.publish(ReadCartDataCommand(raise_error=False))
 
     # Frontend
     config.app.start()
