@@ -63,7 +63,10 @@ channel = Channel()
 
 # CartFlasher
 if not cli_settings.get(SETTINGS_USE_CART_FLASHER_MOCK):
-    cart_flasher = GBXFlasher(settings.get(SETTINGS_FLASHER_PREFERRED_MODE, GBXFlasherMode.DMG))
+    flasher_preferred_mode = GBXFlasherMode.from_str(
+        settings.get(SETTINGS_FLASHER_PREFERRED_MODE, GBXFlasherMode.DMG.value)
+    )
+    cart_flasher = GBXFlasher(flasher_preferred_mode)
 else:
     carts = [
         CartInfo(
@@ -75,31 +78,31 @@ else:
             "Legend of Zelda, The - Link's Awakening (France)",
             save_supported=True,
         ),
-        # CartInfo(
-        #     "PKTCG",
-        #     "02",
-        #     "checksum_PKTCG",
-        #     GameSupport.GAMEBOY_OR_GAMEBOY_COLOR,
-        #     GameRegion.EUROPE,
-        #     "Pokemon Trading Card Game (Europe) (En,Fr,De) (SGB Enhanced) (GB Compatible)",
-        # ),
-        # CartInfo(
-        #     "MT",
-        #     "03",
-        #     "checksum_MT",
-        #     GameSupport.GAMEBOY_COLOR,
-        #     GameRegion.EUROPE,
-        #     "Mario Tennis (Europe)",
-        # ),
-        # CartInfo(
-        #     "FFTA",
-        #     "04",
-        #     "checksum_FFTA",
-        #     GameSupport.GAMEBOY_ADVANCE,
-        #     GameRegion.EUROPE,
-        #     "Final Fantasy Tactics Advance (Europe) (En,Fr,De,Es,It)",
-        # ),
-        # None,
+        CartInfo(
+            "PKTCG",
+            "02",
+            "checksum_PKTCG",
+            GameSupport.GAMEBOY_OR_GAMEBOY_COLOR,
+            GameRegion.EUROPE,
+            "Pokemon Trading Card Game (Europe) (En,Fr,De) (SGB Enhanced) (GB Compatible)",
+        ),
+        CartInfo(
+            "MT",
+            "03",
+            "checksum_MT",
+            GameSupport.GAMEBOY_COLOR,
+            GameRegion.EUROPE,
+            "Mario Tennis (Europe)",
+        ),
+        CartInfo(
+            "FFTA",
+            "04",
+            "checksum_FFTA",
+            GameSupport.GAMEBOY_ADVANCE,
+            GameRegion.EUROPE,
+            "Final Fantasy Tactics Advance (Europe) (En,Fr,De,Es,It)",
+        ),
+        None,
     ]
     cart_flasher = MockCartFlasher(carts)
 

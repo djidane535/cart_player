@@ -84,7 +84,7 @@ class GBXFlasher(CartFlasher):
             exceptions = []
             dto = CartInfoDTO(title="UNKNOWN GAME", support=GameSupport.GAMEBOY_ADVANCE if mode == GBXFlasherMode.AGB else None)
             flashgbx_path = self.__get_flashgbx_path()
-            command = f"{flashgbx_path} --mode {mode} --action info"
+            command = f"{flashgbx_path} --mode {mode.value} --action info"
             try:
                 GBXFlasher.last_command_success = False
                 run_command_with_realtime_output(command, lambda line: self.__read_cart_info_handler(mode, dto, line))
@@ -121,7 +121,7 @@ class GBXFlasher(CartFlasher):
         filepath = Path(f.name)
 
         flashgbx_path = self.__get_flashgbx_path()
-        command = f"{flashgbx_path} --mode {mode} --action backup-rom {filepath}"
+        command = f"{flashgbx_path} --mode {mode.value} --action backup-rom {filepath}"
         GBXFlasher.last_command_success = False
         run_command_with_realtime_output(command, lambda line: self.__read_game_handler(report_progress_callback, line))
         if not GBXFlasher.last_command_success:
@@ -142,7 +142,7 @@ class GBXFlasher(CartFlasher):
         filepath = Path(f.name)
 
         flashgbx_path = self.__get_flashgbx_path()
-        command = f"{flashgbx_path} --mode {mode} --action backup-save {filepath}"
+        command = f"{flashgbx_path} --mode {mode.value} --action backup-save {filepath}"
         GBXFlasher.last_command_success = False
         run_command_with_realtime_output(command, lambda line: self.__read_save_handler(report_progress_callback, line))
         if not GBXFlasher.last_command_success:
@@ -159,7 +159,7 @@ class GBXFlasher(CartFlasher):
         mode = GBXFlasherMode.AGB if cart_info.support == GameSupport.GAMEBOY_ADVANCE else GBXFlasherMode.DMG
 
         flashgbx_path = self.__get_flashgbx_path()
-        command = f"{flashgbx_path} --mode {mode} --action erase-save --overwrite"
+        command = f"{flashgbx_path} --mode {mode.value} --action erase-save --overwrite"
         GBXFlasher.last_command_success = False
         run_command_with_realtime_output(
             command, lambda line: self.__erase_save_handler(report_progress_callback, line)
@@ -179,7 +179,7 @@ class GBXFlasher(CartFlasher):
         filepath = Path(f.name)
 
         flashgbx_path = self.__get_flashgbx_path()
-        command = f"{flashgbx_path} --mode {mode} --action restore-save {filepath} --overwrite"
+        command = f"{flashgbx_path} --mode {mode.value} --action restore-save {filepath} --overwrite"
         GBXFlasher.last_command_success = False
         run_command_with_realtime_output(
             command, lambda line: self.__write_save_handler(report_progress_callback, line)

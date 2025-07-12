@@ -5,6 +5,8 @@ from pathlib import Path
 
 from easysettings import EasySettings
 
+from cart_player.backend.utils.models import GBXFlasherMode
+
 APP_NAME = "CartPlayer"
 if os.name == 'posix':
     import appdirs
@@ -32,7 +34,10 @@ SETTINGS_FILEPATH.parent.mkdir(parents=True, exist_ok=True)
 SETTINGS_FILEPATH = str(SETTINGS_FILEPATH)
 settings = EasySettings(SETTINGS_FILEPATH)
 settings.set(SETTINGS_MEMORY_PATH, settings.get(SETTINGS_MEMORY_PATH))
-settings.set(SETTINGS_FLASHER_PREFERRED_MODE, settings.get(SETTINGS_FLASHER_PREFERRED_MODE))
+settings.set(
+    SETTINGS_FLASHER_PREFERRED_MODE,
+    settings.get(SETTINGS_FLASHER_PREFERRED_MODE, GBXFlasherMode.DMG),
+)
 settings.save()
 
 # Load CLI settings

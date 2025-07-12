@@ -3,7 +3,7 @@
 
 CartPlayer is an app for managing and playing your GameBoy, GameBoy Color and GameBoy Advance games using a physical cartridge reader.
 
-The app has been designed to work with GBxCart RW, but will likely work with any cartridge reader compatible with FlashGBX (tested with ver. 3.22).
+The app has been designed to work with GBxCart RW, but will likely work with any cartridge reader compatible with FlashGBX (tested with ver. 4.4).
 
 ----
 
@@ -20,7 +20,7 @@ See the [`Release`](https://github.com/djidane535/cart_player/releases) section 
 ### Windows
 
 - Download windows version of [FlashGBX](https://github.com/lesserkuma/FlashGBX/releases) (portable zip).
-- Extract its content into `CartPlayer/` directory (*note: `CartPlayer.exe` and `FlashGBX.exe` should be within the same directory). 
+- Extract its content into `CartPlayer/_internal/` directory. 
 - You can now launch the app by running `CartPlayer.exe`.
 
 ### Mac OSX
@@ -38,11 +38,11 @@ Follow instructions from the official website: [https://www.python.org/downloads
 Open a terminal (`Terminal` on OSX, `Windows Powershell` on Windows) and type this:
 
 ```bash
-# App has only been tested with this version 3.27
-pip3 install FlashGBX==3.27  
+# App has only been tested with this version 4.4
+pip3 install FlashGBX==4.4 
 
 # -- if it fails, try this one instead
-pip install FlashGBX==3.27
+pip install FlashGBX==4.4
 ```
 
 ## Developer

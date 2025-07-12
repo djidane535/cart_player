@@ -176,8 +176,6 @@ class SgApp(App, LocalMemoryConfigurable):
     def update_local_memory_config(self, local_memory_config: LocalMemoryConfiguration):
         if local_memory_config.root_path:
             self._ctx_memory_path = local_memory_config.root_path
-        if local_memory_config.preferred_mode:
-            self._ctx_flasher_preferred_mode = local_memory_config.preferred_mode
 
     @lockedmethod
     def start(self):
