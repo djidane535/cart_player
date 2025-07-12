@@ -4,7 +4,7 @@ from typing import Type
 from cart_player.backend.domain.commands import ExportToAnaloguePocketLibraryCommand
 from cart_player.backend.domain.models import CartInfo, GameImage
 from cart_player.backend.domain.ports import Memory
-from cart_player.backend.utils.models import GameDataType
+from cart_player.backend.utils.models import GameDataType, MemoryOnExistMode
 from cart_player.core import Broker, Handler, config
 
 logger = logging.getLogger(f"{config.LOGGER_NAME}::ExportToAnaloguePocketLibraryHandler")
@@ -31,4 +31,10 @@ class ExportToAnaloguePocketLibraryHandler(Handler):
 
         cart_info = CartInfo.create(cmd.cart_info)
         n_data = GameImage.convert_to_analogue_pocket_library(cmd.game_image.data)
-        self._memory.save(cart_info, n_data, GameDataType.ANALOGUE_POCKET_IMAGE, {"crc": cmd.game_metadata.crc})
+        self._memory.save(
+            cart_info, 
+            n_data, 
+            GameDataType.ANALOGUE_POCKET_IMAGE,
+            {"crc": cmd.game_metadata.crc},
+            on_exist=MemoryOnExistMode.NOTHING,
+        )

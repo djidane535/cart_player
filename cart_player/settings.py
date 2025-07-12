@@ -17,6 +17,7 @@ SETTINGS_FILEPATH = BASE_APP_PATH
 SETTINGS_FILEPATH = SETTINGS_FILEPATH / "settings.conf"
 
 SETTINGS_MEMORY_PATH = "memory_path"
+SETTINGS_FLASHER_PREFERRED_MODE = "flasher_preferred_mode"
 SETTINGS_USE_MEMORY_MOCK = "use_memory_mock"
 SETTINGS_NO_MEMORY = "no_memory"
 SETTINGS_USE_CART_FLASHER_MOCK = "use_cart_flasher_mock"
@@ -31,6 +32,7 @@ SETTINGS_FILEPATH.parent.mkdir(parents=True, exist_ok=True)
 SETTINGS_FILEPATH = str(SETTINGS_FILEPATH)
 settings = EasySettings(SETTINGS_FILEPATH)
 settings.set(SETTINGS_MEMORY_PATH, settings.get(SETTINGS_MEMORY_PATH))
+settings.set(SETTINGS_FLASHER_PREFERRED_MODE, settings.get(SETTINGS_FLASHER_PREFERRED_MODE))
 settings.save()
 
 # Load CLI settings

@@ -17,6 +17,16 @@ class CartInfo(BaseModel):
     sgb_supported: bool = False
 
     @property
+    def is_empty(self) -> bool:
+        return not bool(
+            self.title
+            or self.header_checksum
+            or self.code
+            or self.support is not None
+            or (self.region is not None and self.region != GameRegion.UNKNOWN)
+        )
+
+    @property
     def id(self) -> Optional[str]:
         if self.title or self.code or self.header_checksum or self.id_override:
             return CartInfo._build_id(self.title, self.code, self.header_checksum, self.id_override)

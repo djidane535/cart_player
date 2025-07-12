@@ -1,5 +1,6 @@
 from .component_builders import ComponentKey, Focusable, Freezable
 from .data_layout_builder import DataLayoutBuilder
+from .edit_layout_builder import EDIT_WINDOW_TITLE, EditLayoutBuilder
 from .main_layout_builder import (
     GAME_IMAGE_SQUARE_SIZE,
     POP_UP_MESSAGE_WIDTH,

@@ -3,14 +3,21 @@ from typing import List, Optional
 
 from cart_player.backend.domain.dtos import MemoryConfiguration
 from cart_player.backend.domain.models import CartInfo, GameData
-from cart_player.backend.utils.models import GameDataType
+from cart_player.backend.utils.models import GameDataType, MemoryOnExistMode
 
 
 class Memory(abc.ABC):
     """Storage dedicated to cart games and saves."""
 
     @abc.abstractmethod
-    def save(self, cart_info: CartInfo, content: bytes, type: GameDataType, metadata: dict = {}):
+    def save(
+        self, 
+        cart_info: CartInfo, 
+        content: bytes, 
+        type: GameDataType, 
+        metadata: dict = {}, 
+        on_exist: MemoryOnExistMode = MemoryOnExistMode.WARNING,
+    ):
         """Save content into memory.
 
         Args:
@@ -18,6 +25,7 @@ class Memory(abc.ABC):
             type: Type of game data.
             metadata: Metadata of the file to save. May be required for some GameDataTypes.
                       (see concrete implementation)
+            on_exist: The behaviour when data already exists on memory.
 
         Raises:
             RuntimeError: If unable to save content into memory.
@@ -55,6 +63,17 @@ class Memory(abc.ABC):
 
         Returns:
             The list of all game data associated to the provided cart_info.
+        """
+        pass
+
+    @abc.abstractmethod
+    def delete_all(self, cart_info: CartInfo, type: Optional[GameDataType] = None, crc: str = None):
+        """Delete all data associated to the provided cart_info.
+        
+        Args:
+            cart_info: Information about the cart whose game data has to be retrieved.
+            type: Type of game data to retrieve. If None, all types of game data are returned.
+            crc: CRC code.
         """
         pass
 

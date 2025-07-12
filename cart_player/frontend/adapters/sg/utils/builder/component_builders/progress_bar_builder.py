@@ -1,6 +1,6 @@
 from typing import Any, Dict, Tuple
 
-import PySimpleGUI as sg
+import FreeSimpleGUI as sg
 
 from cart_player.core.utils import lockedclass, lockedmethod
 

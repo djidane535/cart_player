@@ -32,7 +32,7 @@ from cart_player.backend.tests.mocks import (
     MockGameMetadataLibrary,
     MockMemory,
 )
-from cart_player.backend.utils.models import GameRegion, GameSupport
+from cart_player.backend.utils.models import GameRegion, GameSupport, GBXFlasherMode
 from cart_player.core import Broker, Channel
 from cart_player.frontend.adapters.sg import SgApp
 from cart_player.frontend.domain.events import WindowReadNoWindowEvent, WindowReadTimeoutEvent
@@ -41,6 +41,7 @@ from cart_player.frontend.domain.ports import LocalMemoryConfigurable
 from .logging_handlers import logging_handlers
 from .settings import (
     APP_NAME,
+    SETTINGS_FLASHER_PREFERRED_MODE,
     SETTINGS_MEMORY_PATH,
     SETTINGS_NO_MEMORY,
     SETTINGS_RESET_MEMORY,
@@ -57,33 +58,48 @@ logging.root.setLevel(logging.DEBUG)
 [logging.root.addHandler(handler) for handler in logging_handlers]
 
 # App
-app = SgApp(APP_NAME, settings.get(SETTINGS_MEMORY_PATH))
+app = SgApp(APP_NAME, settings.get(SETTINGS_MEMORY_PATH), settings.get(SETTINGS_FLASHER_PREFERRED_MODE))
 channel = Channel()
 
 # CartFlasher
 if not cli_settings.get(SETTINGS_USE_CART_FLASHER_MOCK):
-    cart_flasher = GBXFlasher()
+    cart_flasher = GBXFlasher(settings.get(SETTINGS_FLASHER_PREFERRED_MODE, GBXFlasherMode.DMG))
 else:
     carts = [
         CartInfo(
-            "ZLA", "01", GameSupport.GAMEBOY, GameRegion.EUROPE, "Legend of Zelda, The - Link's Awakening (France)"
-        ),
-        CartInfo(
-            "PKTCG",
-            "02",
-            GameSupport.GAMEBOY_OR_GAMEBOY_COLOR,
+            "ZLA",
+            "01",
+            "checksum_ZLA",
+            GameSupport.GAMEBOY,
             GameRegion.EUROPE,
-            "Pokemon Trading Card Game (Europe) (En,Fr,De) (SGB Enhanced) (GB Compatible)",
+            "Legend of Zelda, The - Link's Awakening (France)",
+            save_supported=True,
         ),
-        CartInfo("MT", "03", GameSupport.GAMEBOY_COLOR, GameRegion.EUROPE, "Mario Tennis (Europe)"),
-        CartInfo(
-            "FFTA",
-            "04",
-            GameSupport.GAMEBOY_ADVANCE,
-            GameRegion.EUROPE,
-            "Final Fantasy Tactics Advance (Europe) (En,Fr,De,Es,It)",
-        ),
-        None,
+        # CartInfo(
+        #     "PKTCG",
+        #     "02",
+        #     "checksum_PKTCG",
+        #     GameSupport.GAMEBOY_OR_GAMEBOY_COLOR,
+        #     GameRegion.EUROPE,
+        #     "Pokemon Trading Card Game (Europe) (En,Fr,De) (SGB Enhanced) (GB Compatible)",
+        # ),
+        # CartInfo(
+        #     "MT",
+        #     "03",
+        #     "checksum_MT",
+        #     GameSupport.GAMEBOY_COLOR,
+        #     GameRegion.EUROPE,
+        #     "Mario Tennis (Europe)",
+        # ),
+        # CartInfo(
+        #     "FFTA",
+        #     "04",
+        #     "checksum_FFTA",
+        #     GameSupport.GAMEBOY_ADVANCE,
+        #     GameRegion.EUROPE,
+        #     "Final Fantasy Tactics Advance (Europe) (En,Fr,De,Es,It)",
+        # ),
+        # None,
     ]
     cart_flasher = MockCartFlasher(carts)
 
@@ -140,6 +156,7 @@ broker = Broker(channel=channel)
 
 # Core - event handlers
 broker.register(core_services.LocalMemoryConfigurationUpdatedEventHandler(main_broker))
+broker.register(core_services.GBXFlasherConfigurationUpdatedEventHandler(main_broker))
 broker.register(core_services.UnexpectedWarningEventHandler(main_broker))
 broker.register(core_services.UnexpectedErrorEventHandler(main_broker))
 
@@ -150,6 +167,7 @@ channel.ignore(WindowReadTimeoutEvent)
 # Frontend - handlers
 main_broker.register(frontend_services.OpenDataWindowHandler(main_broker, app))
 main_broker.register(frontend_services.OpenPlayWindowHandler(main_broker, app))
+main_broker.register(frontend_services.OpenEditWindowHandler(main_broker, app))
 main_broker.register(frontend_services.OpenPopUpWarningWindowHandler(main_broker, app))
 main_broker.register(frontend_services.OpenPopUpErrorWindowHandler(main_broker, app))
 main_broker.register(frontend_services.OpenSettingsWindowHandler(main_broker, app))
@@ -163,6 +181,10 @@ broker.register(frontend_services.UpdateETAHandler(broker, app))
 
 # Frontend - event handlers
 main_broker.register(frontend_services.DataSelectorButtonPressedEventHandler(main_broker))
+main_broker.register(frontend_services.EditApplyButtonPressedEventHandler(main_broker))
+main_broker.register(frontend_services.EditClearButtonPressedEventHandler(main_broker))
+main_broker.register(frontend_services.GameDataDeletedEventHandler(main_broker))
+main_broker.register(frontend_services.GameDataUpdatedEventHandler(main_broker))
 main_broker.register(frontend_services.PlaySelectorButtonPressedEventHandler(main_broker))
 main_broker.register(frontend_services.PopUpWindowIsClosingEventHandler(main_broker))
 main_broker.register(frontend_services.SettingsSelectorButtonPressedEventHandler(main_broker))
@@ -175,6 +197,7 @@ broker.register(frontend_services.CartDataReadEventHandler(broker, app))
 broker.register(frontend_services.CartSaveBackupEventHandler(broker))
 broker.register(frontend_services.CartSaveErasedEventHandler(broker))
 broker.register(frontend_services.CartSaveWrittenEventHandler(broker))
+broker.register(frontend_services.ComboGBXFlasherPreferredModeUpdatedHandler(broker))
 broker.register(frontend_services.EndSessionButtonPressedEventHandler(broker, app))
 broker.register(frontend_services.EraseButtonPressedEventHandler(broker))
 broker.register(frontend_services.EraseCartSaveProgressEventHandler(broker))
@@ -192,11 +215,15 @@ if isinstance(memory, LocalMemory) and isinstance(app, LocalMemoryConfigurable):
 # Backend - handlers
 broker.register(backend_services.BackupCartSaveHandler(broker, memory, cart_flasher))
 broker.register(backend_services.BackupSaveFileAfterPlayingHandler(broker, memory))
+broker.register(backend_services.CartDataReadEventHandler(broker))
+broker.register(backend_services.DeleteGameDataFromMemoryHandler(broker, memory, game_library))
 broker.register(backend_services.EraseCartSaveHandler(broker, memory, cart_flasher))
 broker.register(backend_services.ExportToAnaloguePocketLibraryHandler(broker, memory))
 broker.register(backend_services.InstallCartGameHandler(broker, memory, cart_flasher))
 broker.register(backend_services.ReadCartDataHandler(broker, memory, cart_flasher, game_library))
 broker.register(backend_services.SetupGameFileAndSaveFileForPlayingHandler(broker, memory))
+broker.register(backend_services.UpdateGBXFLasherConfigurationHandler(broker, cart_flasher))
+broker.register(backend_services.UpdateGameDataFromMemoryHandler(broker, memory))
 broker.register(backend_services.WriteCartSaveHandler(broker, memory, cart_flasher))
 if isinstance(memory, LocalMemory):
     broker.register(backend_services.UpdateLocalMemoryConfigurationHandler(broker, memory))

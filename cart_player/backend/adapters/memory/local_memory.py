@@ -4,6 +4,7 @@ import hashlib
 import itertools
 import json
 import logging
+import os
 import pickle
 import re
 import shutil
@@ -14,7 +15,7 @@ from typing import Any, List, Optional, Tuple, Union
 from cart_player.backend.domain.dtos import LocalMemoryConfiguration
 from cart_player.backend.domain.models import CartInfo, GameData
 from cart_player.backend.domain.ports import Memory
-from cart_player.backend.utils.models import GameDataType, GameSupport
+from cart_player.backend.utils.models import GameDataType, GameSupport, MemoryOnExistMode
 from cart_player.core import config
 
 logger = logging.getLogger(f"{config.LOGGER_NAME}::LocalMemory")
@@ -93,7 +94,14 @@ class LocalMemory(Memory):
         """Path to memory pocket image folder."""
         return self._root_path / Path("pocket_image")
 
-    def save(self, cart_info: CartInfo, content: bytes, type: GameDataType, metadata: dict = {}):
+    def save(
+        self, 
+        cart_info: CartInfo, 
+        content: bytes, 
+        type: GameDataType, 
+        metadata: dict = {},
+        on_exist: MemoryOnExistMode = MemoryOnExistMode.WARNING,
+    ):
         """Save game data into local memory, which follows this structure:
             * Cart games location: <root_path>/games/
             * Cart saves location: <root_path>/saves/
@@ -113,6 +121,7 @@ class LocalMemory(Memory):
             type: Type of game data.
             metadata: Metadata of the file to save.
                       Required for GameDataType.ANALOGUE_POCKET_IMAGE w/ 'crc' key (str).
+            on_exist: The behaviour when data already exists on memory.
 
         Raises:
             RuntimeError: If an error happens when creating local memory folders or when writing content into a file.
@@ -128,9 +137,11 @@ class LocalMemory(Memory):
 
         # Skip if file already exists
         if LocalMemory._is_file_content_matching(processed_content, is_bytes, filepath):
-            logger.warning(
-                f"File content is the same, no new file has been created (id={cart_info.id}, filepath={str(filepath)})"
-            )
+            if on_exist == MemoryOnExistMode.WARNING:
+                logger.warning(
+                    f"File content is the same, no new file has been created (id={cart_info.id}, filepath={str(filepath)})"
+                )
+
             return
 
         # Create file parent directory(ies)
@@ -198,6 +209,10 @@ class LocalMemory(Memory):
         type: Optional[GameDataType] = None,
         with_content: bool = False,
     ) -> List[GameData]:
+        if type == GameDataType.ANALOGUE_POCKET_IMAGE:
+            logger.warning(f"Unsupported type '{type}' for Memory::get_all() method.")
+            return []
+
         # Call method with all GameDataTypes and concat all results
         if type is None:
             return list(
@@ -245,6 +260,35 @@ class LocalMemory(Memory):
             )
 
         return game_data_list
+    
+    def delete_all(self, cart_info: CartInfo, type: Optional[GameDataType] = None, crc: str = None):
+        filepaths = []
+        if type is None or type == GameDataType.CART:
+            filepaths.append(self._get_cart_filepath(cart_info))
+        if type is None or type == GameDataType.GAME:
+            filepaths.append(self._get_game_filepath(cart_info))
+        if type is None or type == GameDataType.SAVE:
+            base_save_filepath = self._get_base_save_filepath(cart_info)
+            filepaths.extend(
+                [
+                    str(file)
+                    for file in Path(base_save_filepath).parent.iterdir()
+                    if file.is_file()
+                    and file.name.startswith(f"{cart_info.base_save_filename}.{cart_info.save_file_extension}")
+                ]
+            )
+        if type is None or type == GameDataType.METADATA:
+            filepaths.append(self._get_metadata_filepath(cart_info))
+        if type is None or type == GameDataType.IMAGE:
+            filepaths.append(self._get_image_filepath(cart_info))
+        if crc and (type is None or type == GameDataType.ANALOGUE_POCKET_IMAGE):
+            filepaths.append(self._get_pocket_image_filepath(cart_info, crc))
+
+        for filepath in filepaths:
+            try:
+                os.remove(filepath)
+            except:
+                pass
 
     def update_configuration(self, dto: LocalMemoryConfiguration):
         """Update memory configuration.
@@ -348,6 +392,9 @@ class LocalMemory(Memory):
         Return:
             Filepath of the file where to save content in memory (pocket image).
         """
+        if not crc:
+            logger.error("CRC is mandatory.")
+
         support_subpath = LocalMemory._get_support_subpath(cart_info.support)
         return self.pocket_image_path / support_subpath / Path(f"{crc}.{cart_info.pocket_image_file_extension}")
 

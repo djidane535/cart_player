@@ -45,7 +45,7 @@ class OpenPopUpErrorWindowCommand(OpenPopUpWarningWindowCommand):
 
 
 class RestorePreviousWindowCommand(BaseMessage):
-    pass
+    on_end_emit: Optional[BaseMessage] = None
 
 
 class StopAppCommand(BaseMessage):

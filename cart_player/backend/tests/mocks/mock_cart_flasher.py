@@ -1,8 +1,9 @@
 import os
 import time
 from datetime import datetime, timedelta
-from typing import Callable, List
+from typing import Callable, List, Optional
 
+from cart_player.backend.domain.dtos import CartFlasherConfiguration
 from cart_player.backend.domain.models import CartInfo
 from cart_player.backend.domain.ports import CartFlasher
 
@@ -17,6 +18,9 @@ class MockCartFlasher(CartFlasher):
     @property
     def cart_inserted(self) -> bool:
         return self._cart
+    
+    def update_configuration(self, dto: CartFlasherConfiguration):
+        pass
 
     @property
     def _cart(self) -> CartInfo:
@@ -31,38 +35,54 @@ class MockCartFlasher(CartFlasher):
     def _read_cart_info(self) -> CartInfo:
         return self._cart
 
-    def _read_game(self, cart_info: CartInfo, report_progress_callback: Callable[[float], None]) -> bytes:
+    def _read_game(
+        self,
+        cart_info: CartInfo,
+        report_progress_callback: Callable[[float, Optional[timedelta]], None],
+    ) -> bytes:
         for i in range(0, 26, 5):
-            report_progress_callback(i / 100.0)
+            report_progress_callback(i / 100.0, None)
             time.sleep(0.1)
         time.sleep(3)
         for i in range(30, 101, 5):
-            report_progress_callback(i / 100.0)
+            report_progress_callback(i / 100.0, None)
             time.sleep(0.05)
 
         return os.urandom(2_000)
 
-    def _read_save(self, cart_info: CartInfo, report_progress_callback: Callable[[float], None]) -> bytes:
+    def _read_save(
+        self,
+        cart_info: CartInfo,
+        report_progress_callback: Callable[[float, Optional[timedelta]], None],
+    ) -> bytes:
         for i in range(0, 81, 5):
-            report_progress_callback(i / 100.0)
+            report_progress_callback(i / 100.0, None)
             time.sleep(0.05)
         time.sleep(0.25)
         for i in range(85, 101, 5):
-            report_progress_callback(i / 100.0)
+            report_progress_callback(i / 100.0, None)
             time.sleep(0.01)
 
         return os.urandom(512)
 
-    def _write_save(self, cart_info: CartInfo, data: bytes, report_progress_callback: Callable[[float], None]) -> bytes:
+    def _write_save(
+        self,
+        cart_info: CartInfo,
+        data: bytes, report_progress_callback: Callable[[float, Optional[timedelta]], None],
+    ) -> bytes:
         for i in range(0, 40, 3):
-            report_progress_callback(i / 100.0)
+            report_progress_callback(i / 100.0, None)
             time.sleep(0.05)
         time.sleep(0.25)
         for i in range(43, 101, 5):
-            report_progress_callback(i / 100.0)
+            report_progress_callback(i / 100.0, None)
             time.sleep(0.01)
 
         return os.urandom(512)
 
-    def erase_save(self, cart_info: CartInfo, report_progress_callback: Callable[[float], None]):
+    def _erase_save(
+        self,
+        cart_info: CartInfo,
+        report_progress_callback: Callable[[float, Optional[timedelta]], None],
+    ):
         raise NotImplementedError

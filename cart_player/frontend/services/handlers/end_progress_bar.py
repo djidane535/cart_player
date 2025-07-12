@@ -1,7 +1,8 @@
 from typing import Type
 
+from cart_player.backend.domain.commands import ReadCartDataCommand
 from cart_player.core import Broker, Handler
-from cart_player.frontend.domain.commands import EndProgressBarCommand
+from cart_player.frontend.domain.commands import EndProgressBarCommand, RestorePreviousWindowCommand
 from cart_player.frontend.domain.ports import App
 
 
@@ -18,3 +19,7 @@ class EndProgressBarHandler(Handler):
 
     def _handle(self, evt: EndProgressBarCommand):
         self._app.complete_progress_bar(failure=evt.failure)
+        if evt.failure:
+            self._publish(
+                RestorePreviousWindowCommand(on_end_emit=ReadCartDataCommand(raise_error=False))
+            )

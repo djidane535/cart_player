@@ -1,5 +1,6 @@
 from typing import Type
 
+from cart_player.backend.domain.commands import ReadCartDataCommand
 from cart_player.core import Broker, Handler
 from cart_player.frontend.domain.commands import RestorePreviousWindowCommand
 from cart_player.frontend.domain.ports import App
@@ -19,3 +20,6 @@ class RestorePreviousWindowHandler(Handler):
     def _handle(self, evt: RestorePreviousWindowCommand):
         self._app.end_game_session()
         self._app.restore_previous_window()
+
+        if evt.on_end_emit:
+            self._publish(evt.on_end_emit)

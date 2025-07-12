@@ -22,7 +22,7 @@ REQUIRES_PYTHON = ">=3.9, <4"
 
 REQUIRED = [
     "Pillow==10.1.*",
-    "PySimpleGUI==4.60.*",
+    "PySimpleGUI==5.0.*",
     "easysettings==4.0.*",
     "pydantic==1.10.*",
     "rapidfuzz==2.13.*",

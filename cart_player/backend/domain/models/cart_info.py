@@ -181,3 +181,16 @@ class CartInfo:
             save_supported=dto.save_supported,
             sgb_supported=dto.sgb_supported,
         )
+
+    def to_dto(self) -> CartInfoDTO:
+        return CartInfoDTO(
+            title=self.title,
+            header_checksum=self.header_checksum,
+            code=self.code,
+            support=self.support,
+            region=self.region,
+            id_override=self.id_override,
+            image_ratio_override=self.image_ratio_override,
+            save_supported=self.save_supported,
+            sgb_supported=self.sgb_supported,
+        )

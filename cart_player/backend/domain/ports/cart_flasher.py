@@ -2,6 +2,7 @@ import abc
 from contextlib import contextmanager
 from typing import Callable
 
+from cart_player.backend.domain.dtos import CartFlasherConfiguration
 from cart_player.backend.domain.models import CartInfo
 from cart_player.core.exceptions import NoCartInCartFlasherException
 from cart_player.core.utils import lockedclass, lockedmethod
@@ -37,6 +38,15 @@ class CartFlasher(abc.ABC):
     def is_busy(self) -> bool:
         """True if cart flasher is busy."""
         return self._busy
+
+    @abc.abstractmethod
+    def update_configuration(self, dto: CartFlasherConfiguration):
+        """Update flasher configuration.
+
+        Args:
+            dto: Cart flasher configuration.
+        """
+        pass
 
     @lockedmethod
     def read_cart_info(self) -> CartInfo:

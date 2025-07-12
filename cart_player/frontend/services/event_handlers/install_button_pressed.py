@@ -15,4 +15,4 @@ class InstallButtonPressedEventHandler(Handler):
 
     def _handle(self, evt: InstallButtonPressedEvent):
         self._publish(BeginProgressBarCommand())
-        self._publish(InstallCartGameCommand())
+        self._publish(InstallCartGameCommand(cart_info=evt.cart_info))

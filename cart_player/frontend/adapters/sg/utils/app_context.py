@@ -4,13 +4,14 @@ from typing import List, Optional
 
 from pydantic import BaseModel
 
-from cart_player.backend.api.dtos import CartInfo, GameData
+from cart_player.backend.api.dtos import CartInfo, GameData, GameMetadata
+from cart_player.backend.utils.models import GBXFlasherMode
 
 MAIN_WINDOW_TITLE = "Cart Player"
 PLAY_WINDOW_TITLE = "PLAY"
 DATA_WINDOW_TITLE = "DATA"
-UNKNOWN_WINDOW = "UNKNOWN"
 SETTINGS_WINDOW_TITLE = "SETTINGS"
+UNKNOWN_WINDOW_TITLE = "UNKNOWN"
 
 
 class WindowType(str, Enum):
@@ -18,7 +19,7 @@ class WindowType(str, Enum):
     PLAY = PLAY_WINDOW_TITLE
     DATA = DATA_WINDOW_TITLE
     SETTINGS = SETTINGS_WINDOW_TITLE
-    UNKNOWN = UNKNOWN_WINDOW
+    UNKNOWN = UNKNOWN_WINDOW_TITLE
 
     @staticmethod
     def from_str(s):
@@ -41,6 +42,7 @@ class AppContext(BaseModel):
     cart_id: Optional[str]
     cart_save_supported: bool
     cart_sgb_supported: bool
+    game_metadata: Optional[GameMetadata]
     is_game_installed: bool
     game_name: Optional[str]
     game_saves_list: List[GameData]
@@ -56,6 +58,7 @@ class AppContext(BaseModel):
 
     # Settings
     memory_path: Path
+    flasher_preferred_mode: GBXFlasherMode
 
     @property
     def cart_inserted(self) -> bool:

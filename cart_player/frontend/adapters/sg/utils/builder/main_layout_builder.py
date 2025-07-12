@@ -3,7 +3,7 @@ from collections import defaultdict
 from pathlib import Path
 from typing import List
 
-import PySimpleGUI as sg
+import FreeSimpleGUI as sg
 
 from cart_player.frontend.adapters.sg.utils.text import wrap_text
 
@@ -14,7 +14,7 @@ GAME_IMAGE_SQUARE_SIZE = 256
 KEY_TEXT_WIDTH = 15 if os.name == 'nt' else 10
 VALUE_TEXT_WIDTH = 50 if os.name == 'nt' else 75
 VALUE_TEXT_MAX_LINES_PER_KEY = defaultdict(lambda: 1)
-VALUE_TEXT_MAX_LINES_PER_KEY[ComponentKey.GAME_CART_BOX_VALUE_DESCRIPTION] = 9
+VALUE_TEXT_MAX_LINES_PER_KEY[ComponentKey.GAME_DESCRIPTION_VALUE] = 9
 POP_UP_MESSAGE_WIDTH = 200 if os.name == 'nt' else 150
 
 
@@ -98,6 +98,8 @@ class MainLayoutBuilder:
                         str(MainLayoutBuilder.default_game_cart_box_image_filepath()),
                         square_size=GAME_IMAGE_SQUARE_SIZE,
                         key=ComponentKey.GAME_CART_BOX_IMAGE,
+                        right_click_edit=True,
+                        right_click_clear=True,
                     ),
                     sg.Push(),
                 ],
@@ -118,7 +120,7 @@ class MainLayoutBuilder:
         """Build game cart info components."""
         column_layout = [
             [
-                MainLayoutBuilder._build_info_key_text(field, key=field_key),
+                MainLayoutBuilder._build_info_key_text(field, clear_enabled=clear_enabled, key=field_key),
                 MainLayoutBuilder._build_info_value_text(
                     wrap_text(
                         MainLayoutBuilder.default_game_cart_box_info_value_text(),
@@ -128,41 +130,54 @@ class MainLayoutBuilder:
                     key=value_key,
                 ),
             ]
-            for field, field_key, value_key in [
+            for field, field_key, clear_enabled, value_key in [
                 (
                     "Name",
-                    ComponentKey.GAME_CART_BOX_FIELD_NAME,
-                    ComponentKey.GAME_CART_BOX_VALUE_NAME,
+                    ComponentKey.GAME_NAME_FIELD,
+                    False,
+                    ComponentKey.GAME_NAME_VALUE,
                 ),
                 (
                     "Description",
-                    ComponentKey.GAME_CART_BOX_FIELD_DESCRIPTION,
-                    ComponentKey.GAME_CART_BOX_VALUE_DESCRIPTION,
+                    ComponentKey.GAME_DESCRIPTION_FIELD,
+                    True,
+                    ComponentKey.GAME_DESCRIPTION_VALUE,
                 ),
                 (
                     "Platform",
-                    ComponentKey.GAME_CART_BOX_FIELD_PLATFORM,
-                    ComponentKey.GAME_CART_BOX_VALUE_PLATFORM,
+                    ComponentKey.GAME_PLATFORM_FIELD,
+                    True,
+                    ComponentKey.GAME_PLATFORM_VALUE,
                 ),
                 (
                     "Genre",
-                    ComponentKey.GAME_CART_BOX_FIELD_GENRE,
-                    ComponentKey.GAME_CART_BOX_VALUE_GENRE,
+                    ComponentKey.GAME_GENRE_FIELD,
+                    True,
+                    ComponentKey.GAME_GENRE_VALUE,
                 ),
                 (
                     "Developer",
-                    ComponentKey.GAME_CART_BOX_FIELD_DEVELOPER,
-                    ComponentKey.GAME_CART_BOX_VALUE_DEVELOPER,
+                    ComponentKey.GAME_DEVELOPER_FIELD,
+                    True,
+                    ComponentKey.GAME_DEVELOPER_VALUE,
                 ),
                 (
                     "Region",
-                    ComponentKey.GAME_CART_BOX_FIELD_REGION,
-                    ComponentKey.GAME_CART_BOX_VALUE_REGION,
+                    ComponentKey.GAME_REGION_FIELD,
+                    True,
+                    ComponentKey.GAME_REGION_VALUE,
                 ),
                 (
                     "Release",
-                    ComponentKey.GAME_CART_BOX_FIELD_RELEASE,
-                    ComponentKey.GAME_CART_BOX_VALUE_RELEASE,
+                    ComponentKey.GAME_RELEASE_FIELD,
+                    True,
+                    ComponentKey.GAME_RELEASE_VALUE,
+                ),
+                (
+                    "CRC",
+                    ComponentKey.GAME_CRC_FIELD,
+                    True,
+                    ComponentKey.GAME_CRC_VALUE,
                 ),
             ]
         ]
@@ -173,17 +188,25 @@ class MainLayoutBuilder:
         ).set_expand_y()
 
     @staticmethod
-    def _build_info_key_text(text: str, key: str) -> sg.Text:
+    def _build_info_key_text(text: str, clear_enabled: bool, key: str) -> sg.Text:
         """Build text key."""
         return sg.vtop(
-            TextBuilder.build(text, key=key).set_upper().set_size((KEY_TEXT_WIDTH, 1)).set_font("bold"),
+            TextBuilder
+            .build(text, key=key, right_click_edit=True, right_click_clear=clear_enabled)
+            .set_upper()
+            .set_size((KEY_TEXT_WIDTH, 1))
+            .set_font("bold"),
         )
 
     @staticmethod
     def _build_info_value_text(text: str, key: str) -> sg.Text:
         """Build text value."""
         return sg.vcenter(
-            TextBuilder.build(text, key=key).set_font(
-                ("Consolas", 14) if os.name == 'nt' else ("Andale Mono", 12),
+            TextBuilder
+            .build(text, key=key)
+            .set_font(
+                ("Consolas", 14)
+                if os.name == 'nt'
+                else ("Andale Mono", 12),
             ),  # use monospace font to prevent window from auto-resizing
         )

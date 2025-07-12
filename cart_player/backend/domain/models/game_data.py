@@ -1,7 +1,11 @@
+import json
+import pickle
 from datetime import datetime
 from typing import Optional
 
 from cart_player.backend.utils.models import GameDataType
+
+from .game_metadata import GameMetadata
 
 
 class GameData:
@@ -39,3 +43,14 @@ class GameData:
         self.type = type
         self.extension = extension
         self.metadata = metadata
+
+    def update(self, name: str):
+        if self.type == GameDataType.METADATA:
+            game_metadata: GameMetadata = GameMetadata.create_from_bytes(self.content)
+            game_metadata.name = name
+            self.content =game_metadata.bytes()
+
+        if self.type == GameDataType.CART:
+            cart: dict = pickle.loads(self.content)
+            cart.update({"id_override": name})
+            self.content = pickle.dumps(cart)

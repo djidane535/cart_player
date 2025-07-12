@@ -1,6 +1,7 @@
 from .begin_progress_bar import BeginProgressBarHandler
 from .end_progress_bar import EndProgressBarHandler
 from .open_data_window import OpenDataWindowHandler
+from .open_edit_window import OpenEditWindowHandler
 from .open_play_window import OpenPlayWindowHandler
 from .open_pop_up_error_window import OpenPopUpErrorWindowHandler
 from .open_pop_up_warning_window import OpenPopUpWarningWindowHandler

@@ -1,6 +1,6 @@
 from typing import List
 
-import PySimpleGUI as sg
+import FreeSimpleGUI as sg
 
 from cart_player.frontend.resources import app_icon_filepath
 

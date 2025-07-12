@@ -56,7 +56,6 @@ class GameMetadata:
         Args:
             game_metadata: Game metadata to be used to fill up gaps in this game metadata.
         """
-
         self.name = self.name or game_metadata.name
         self.description = self.description or game_metadata.description
         self.platform = self.platform or game_metadata.platform
@@ -91,7 +90,6 @@ class GameMetadata:
         Returns:
             True if this game metadata contains info for all its fields, False otherwise.
         """
-
         return all(
             [
                 self.name,

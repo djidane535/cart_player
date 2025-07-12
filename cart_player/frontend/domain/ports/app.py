@@ -4,6 +4,7 @@ from typing import List, Optional
 
 from cart_player.backend.api.dtos import CartInfo, GameData, GameImage, GameMetadata
 from cart_player.frontend.domain.events import Event
+from cart_player.frontend.utils.models import EditWindowType
 
 
 class AppStatus(str, Enum):
@@ -131,6 +132,11 @@ class App(abc.ABC):
     @abc.abstractmethod
     def open_settings_window(self):
         """Open a pop-up window for managing app settings."""
+        pass
+
+    @abc.abstractmethod
+    def open_edit_window(self, type: EditWindowType):
+        """Open a pop-up window for editing game box image."""
         pass
 
     @abc.abstractmethod

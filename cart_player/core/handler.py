@@ -1,6 +1,6 @@
 import abc
 import logging
-from typing import Type
+from typing import List, Type
 
 from cart_player.core import config
 
@@ -18,10 +18,17 @@ class Handler(abc.ABC):
         self._broker = broker
 
     @property
-    @abc.abstractmethod
+    def messages_types(self) -> List[Type]:
+        """Types of messages handled by this handler."""
+        return [self.message_type]
+
+    @property
     def message_type(self) -> Type:
         """Type of message handled by this handler."""
-        pass
+        if len(self.messages_types) != 1:
+            raise ValueError
+
+        return next(iter(self.messages_types))
 
     def handle(self, message):
         """
@@ -30,7 +37,7 @@ class Handler(abc.ABC):
         Raises:
             RuntimeError: Type of message cannot be handled by this handler.
         """
-        if not isinstance(message, self.message_type):
+        if all(not isinstance(message, message_type) for message_type in self.messages_types):
             raise RuntimeError(
                 f"Message of type '{type(message)}' cannot be handled by this handler (expected: {self.message_type})",
             )

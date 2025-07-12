@@ -15,4 +15,4 @@ class BackupButtonPressedEventHandler(Handler):
 
     def _handle(self, evt: BackupButtonPressedEvent):
         self._publish(BeginProgressBarCommand())
-        self._publish(BackupCartSaveCommand())
+        self._publish(BackupCartSaveCommand(cart_info=evt.cart_info))

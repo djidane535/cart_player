@@ -9,10 +9,10 @@ from pathlib import Path
 from typing import Callable, Optional
 
 from cart_player.backend import config
-from cart_player.backend.domain.dtos import CartInfo as CartInfoDTO
+from cart_player.backend.domain.dtos import CartInfo as CartInfoDTO, GBXFlasherConfiguration
 from cart_player.backend.domain.models import CartInfo
 from cart_player.backend.domain.ports import CartFlasher
-from cart_player.backend.utils.models import GameSupport
+from cart_player.backend.utils.models import GameSupport, GBXFlasherMode
 
 from .utils import get_name, get_region, run_command_with_realtime_output
 
@@ -47,11 +47,6 @@ SAVE_TYPE = "Save Type"
 SUPER_GAME_BOY = "Super Game Boy"
 
 
-class GBXFlasherMode(str, Enum):
-    DMG = "dmg"
-    AGB = "agb"
-
-
 class GBXFlasher(CartFlasher):
     """Cart flasher, allowing to interact with real carts using a GBxCart.
 
@@ -61,17 +56,33 @@ class GBXFlasher(CartFlasher):
     """
 
     last_command_success: bool = False
+    preferred_mode: GBXFlasherMode
+
+    def __init__(self, preferred_mode: GBXFlasherMode):
+        super().__init__()
+
+        self.preferred_mode = preferred_mode
 
     @property
     def cart_inserted(self) -> bool:
         return True  # cannot determine if cart is inserted or not, so we assume it is always the case
 
+    def update_configuration(self, dto: GBXFlasherConfiguration):
+        """Update flasher configuration.
+
+        Args:
+            dto: GBX flasher configuration.
+        """
+        self.preferred_mode = dto.preferred_mode
+
     def _read_cart_info(self) -> CartInfo:
         # Fill up CartInfoDTO
         dto = None
-        for mode in GBXFlasherMode:
+
+        modes = [self.preferred_mode] + [mode for mode in GBXFlasherMode if mode != self.preferred_mode]
+        for mode in modes:
             exceptions = []
-            dto = CartInfoDTO(support=GameSupport.GAMEBOY_ADVANCE if mode == GBXFlasherMode.AGB else None)
+            dto = CartInfoDTO(title="UNKNOWN GAME", support=GameSupport.GAMEBOY_ADVANCE if mode == GBXFlasherMode.AGB else None)
             flashgbx_path = self.__get_flashgbx_path()
             command = f"{flashgbx_path} --mode {mode} --action info"
             try:

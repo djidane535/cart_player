@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-import PySimpleGUI as sg
+import FreeSimpleGUI as sg
 
 
 class FrameBuilder:

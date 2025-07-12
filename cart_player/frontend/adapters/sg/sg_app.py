@@ -1,5 +1,4 @@
 import base64
-import functools
 import logging
 import os
 import sys
@@ -8,16 +7,29 @@ from datetime import timedelta
 from pathlib import Path
 from typing import Any, Callable, Dict, List, Optional, Union
 
-import PySimpleGUI as sg
+import FreeSimpleGUI as sg
 
 from cart_player.backend.api.dtos import CartInfo, GameData, GameImage, GameMetadata, LocalMemoryConfiguration
 from cart_player.backend.api.models import GameDataType
+from cart_player.backend.utils.models import GBXFlasherMode
 from cart_player.core.utils import lockedclass, lockedmethod
 from cart_player.frontend import config
 from cart_player.frontend.domain.commands import StopAppCommand
 from cart_player.frontend.domain.events import (
     BackupButtonPressedEvent,
+    ComboGBXFlasherPreferredModeUpdated,
     DataSelectorButtonPressedEvent,
+    EditApplyButtonPressed,
+    EditClearButtonPressed,
+    EditGameCartBoxImageEvent,
+    EditGameCRCEvent,
+    EditGameDescriptionEvent,
+    EditGameDeveloperEvent,
+    EditGameGenreEvent,
+    EditGameNameEvent,
+    EditGamePlatformEvent,
+    EditGameRegionEvent,
+    EditGameReleaseEvent,
     EndSessionButtonPressedEvent,
     EraseButtonPressedEvent,
     Event,
@@ -36,10 +48,12 @@ from cart_player.frontend.domain.events import (
 )
 from cart_player.frontend.domain.ports import App, AppStatus, LocalMemoryConfigurable
 from cart_player.frontend.resources import app_icon_fullsize_filepath
+from cart_player.frontend.utils.models import EditWindowType
 from cart_player.settings import BASE_APP_PATH
 
 from .utils import (
     DATA_WINDOW_TITLE,
+    EDIT_WINDOW_TITLE,
     GAME_IMAGE_SQUARE_SIZE,
     MAIN_WINDOW_TITLE,
     PLAY_WINDOW_TITLE,
@@ -50,6 +64,7 @@ from .utils import (
     AppContext,
     ComponentKey,
     DataLayoutBuilder,
+    EditLayoutBuilder,
     Focusable,
     Freezable,
     MainLayoutBuilder,
@@ -72,7 +87,12 @@ logger = logging.getLogger(f"{config.LOGGER_NAME}::SgApp")
 class SgApp(App, LocalMemoryConfigurable):
     """Cart player app."""
 
-    def __init__(self, app_name: str, memory_path: Union[Path, str]):
+    def __init__(
+        self, 
+        app_name: str, 
+        memory_path: Union[Path, str], 
+        flasher_preferred_mode: str,
+    ):
         if os.name == 'posix':  # for macOS and Linux
             self._mac_os_fix()
 
@@ -92,10 +112,12 @@ class SgApp(App, LocalMemoryConfigurable):
         self._ctx_cart_id: Optional[str] = None
         self._ctx_cart_save_supported: bool = False
         self._ctx_cart_sgb_supported: bool = False
+        self._ctx_game_metadata: Optional[GameMetadata] = None
         self._ctx_is_game_installed: bool = False
         self._ctx_game_name: Optional[str] = None
         self._ctx_game_saves_list: List[str] = []
         self._ctx_memory_path = Path(memory_path or self._request_memory_path(app_name))
+        self._ctx_flasher_preferred_mode = GBXFlasherMode.from_str(flasher_preferred_mode) or GBXFlasherMode.DMG
 
     @property
     def status(self) -> AppStatus:
@@ -111,25 +133,28 @@ class SgApp(App, LocalMemoryConfigurable):
         return context.memory_path
 
     def _mac_os_fix(self):
-        # see:
-        #   * https://github.com/PySimpleGUI/PySimpleGUI/issues/5471#issuecomment-1362602139
-        #   * https://github.com/PySimpleGUI/PySimpleGUI/issues/5471#issuecomment-1155669914
+        # FIXME might not be needed anymore
+        pass
 
-        # This prevents an issue on macOS when using night mode where disabled input fields are rendered with black text
-        # on a black background.
-        uInput = functools.partial(
-            sg.Input, disabled_readonly_background_color='white', disabled_readonly_text_color='black'
-        )
-        sg.Input = uInput
+        # # see:
+        # #   * https://github.com/PySimpleGUI/PySimpleGUI/issues/5471#issuecomment-1362602139
+        # #   * https://github.com/PySimpleGUI/PySimpleGUI/issues/5471#issuecomment-1155669914
 
-        # This prevents an issue on macOS where the window is rendered transparent.
-        uWindow = functools.partial(
-            sg.Window,
-            alpha_channel=0.99,
-        )
-        sg.Window = uWindow
+        # # This prevents an issue on macOS when using night mode where disabled input fields are rendered with black text
+        # # on a black background.
+        # uInput = functools.partial(
+        #     sg.Input, disabled_readonly_background_color='white', disabled_readonly_text_color='black'
+        # )
+        # sg.Input = uInput
 
-        logger.info("Mac OS fix applied!")
+        # # This prevents an issue on macOS where the window is rendered transparent.
+        # uWindow = functools.partial(
+        #     sg.Window,
+        #     alpha_channel=0.99,
+        # )
+        # sg.Window = uWindow
+
+        # logger.info("Mac OS fix applied!")
 
     def _request_memory_path(self, app_name: str) -> str:
         default_path = BASE_APP_PATH
@@ -149,7 +174,10 @@ class SgApp(App, LocalMemoryConfigurable):
         return str(Path(memory_parent_path) / "memory")
 
     def update_local_memory_config(self, local_memory_config: LocalMemoryConfiguration):
-        self._ctx_memory_path = local_memory_config.root_path
+        if local_memory_config.root_path:
+            self._ctx_memory_path = local_memory_config.root_path
+        if local_memory_config.preferred_mode:
+            self._ctx_flasher_preferred_mode = local_memory_config.preferred_mode
 
     @lockedmethod
     def start(self):
@@ -186,12 +214,13 @@ class SgApp(App, LocalMemoryConfigurable):
         # Event reading
         name, values = self._windows[-1].read() if self._windows else (NO_WINDOW_EVENT, None)
 
-        logger.debug(f"wait_for_event(): {name=}, {values=}")
+        if name != NO_WINDOW_EVENT:
+            logger.debug(f"wait_for_event(): {name=}, {values=}")
 
         # Build event and return it
         context = self._build_context()
         f = self._convert_to_event_build_function(name, context)
-        kwargs = self._convert_to_event_build_function_kwargs(values, f, context)
+        kwargs = self._convert_to_event_build_function_kwargs(name, values, f, context)
         return f(**kwargs)
 
     def _build_context(self) -> AppContext:
@@ -210,6 +239,7 @@ class SgApp(App, LocalMemoryConfigurable):
             cart_id=self._ctx_cart_id,
             cart_save_supported=self._ctx_cart_save_supported,
             cart_sgb_supported=self._ctx_cart_sgb_supported,
+            game_metadata=self._ctx_game_metadata,
             is_game_installed=self._ctx_is_game_installed,
             game_name=self._ctx_game_name,
             game_saves_list=self._ctx_game_saves_list,
@@ -219,6 +249,7 @@ class SgApp(App, LocalMemoryConfigurable):
             in_pop_up_window=len(self._windows) > 1,
             pending_task=pending_task,
             memory_path=self._ctx_memory_path,
+            flasher_preferred_mode=self._ctx_flasher_preferred_mode,
         )
 
     def reset_progress_bar(self):
@@ -300,7 +331,7 @@ class SgApp(App, LocalMemoryConfigurable):
                 f"Cannot update from cart info when 'status={str(self.status)}'.",
             )
 
-        self._update_context(cart_info, game_data_list)
+        self._update_context(cart_info, game_metadata, game_data_list)
 
         context = self._build_context()
         if context.current_window == MAIN_WINDOW_TITLE:
@@ -323,11 +354,17 @@ class SgApp(App, LocalMemoryConfigurable):
         context = self._build_context()
         self._update_play_window_components(context)
 
-    def _update_context(self, cart_info: CartInfo, game_data_list: List[GameData]):
+    def _update_context(
+        self, 
+        cart_info: CartInfo, 
+        game_metadata: Optional[GameMetadata], 
+        game_data_list: List[GameData]
+    ):
         self._ctx_cart_info = cart_info
         self._ctx_cart_id = cart_info.id
         self._ctx_cart_save_supported = cart_info.save_supported
         self._ctx_cart_sgb_supported = cart_info.sgb_supported
+        self._ctx_game_metadata = game_metadata
 
         if game_data_list is None:
             self._ctx_is_game_installed = False
@@ -357,13 +394,14 @@ class SgApp(App, LocalMemoryConfigurable):
     def _update_game_metadata(self, game_metadata: GameMetadata):
         # Update info displayed
         for attr, value_key in [
-            ("name", ComponentKey.GAME_CART_BOX_VALUE_NAME),
-            ("description", ComponentKey.GAME_CART_BOX_VALUE_DESCRIPTION),
-            ("platform", ComponentKey.GAME_CART_BOX_VALUE_PLATFORM),
-            ("genre", ComponentKey.GAME_CART_BOX_VALUE_GENRE),
-            ("developer", ComponentKey.GAME_CART_BOX_VALUE_DEVELOPER),
-            ("region", ComponentKey.GAME_CART_BOX_VALUE_REGION),
-            ("release", ComponentKey.GAME_CART_BOX_VALUE_RELEASE),
+            ("name", ComponentKey.GAME_NAME_VALUE),
+            ("description", ComponentKey.GAME_DESCRIPTION_VALUE),
+            ("platform", ComponentKey.GAME_PLATFORM_VALUE),
+            ("genre", ComponentKey.GAME_GENRE_VALUE),
+            ("developer", ComponentKey.GAME_DEVELOPER_VALUE),
+            ("region", ComponentKey.GAME_REGION_VALUE),
+            ("release", ComponentKey.GAME_RELEASE_VALUE),
+            ("crc", ComponentKey.GAME_CRC_VALUE),
         ]:
             value_text = self._get_component(value_key)
             text = getattr(game_metadata, attr)
@@ -539,7 +577,7 @@ class SgApp(App, LocalMemoryConfigurable):
         """Open a pop-up window for managing app settings."""
         if self.status != AppStatus.WAITING_FOR_EVENT:
             raise RuntimeError(
-                f"Cannot open data window when 'status={str(self.status)}'.",
+                f"Cannot open settings window when 'status={str(self.status)}'.",
             )
 
         self._freeze()
@@ -550,6 +588,31 @@ class SgApp(App, LocalMemoryConfigurable):
             sg.Window(
                 SETTINGS_WINDOW_TITLE,
                 settings_layout,
+                modal=True,
+                enable_close_attempted_event=True,
+                finalize=True,
+                icon=self._icon,
+            ),
+        )
+        self._progress_bar = None
+        self._disable_focus_on_top_window()
+
+    @lockedmethod
+    def open_edit_window(self, type: EditWindowType):
+        """Open a pop-up window for editing game box image."""
+        if self.status != AppStatus.WAITING_FOR_EVENT:
+            raise RuntimeError(
+                f"Cannot open edit game box image window when 'status={str(self.status)}'.",
+            )
+
+        self._freeze()
+
+        context = self._build_context()
+        edit_layout = EditLayoutBuilder.build(context, type)
+        self._windows.append(
+            sg.Window(
+                EDIT_WINDOW_TITLE,
+                edit_layout,
                 modal=True,
                 enable_close_attempted_event=True,
                 finalize=True,
@@ -681,6 +744,38 @@ class SgApp(App, LocalMemoryConfigurable):
             ComponentKey.UPLOAD_BUTTON: UploadButtonPressedEvent.create,
             ComponentKey.ERASE_BUTTON: EraseButtonPressedEvent.create,
             ComponentKey.OPEN_MEMORY_FOLDER: OpenMemoryButtonPressedEvent.create,
+            # Combo
+            ComponentKey.GBX_FLASHER_PREFERRED_MODE_COMBO: ComboGBXFlasherPreferredModeUpdated.create,
+            # Edit
+            f"Edit::{ComponentKey.GAME_CART_BOX_IMAGE}": EditGameCartBoxImageEvent.create,
+            f"Edit::{ComponentKey.GAME_NAME_FIELD}": EditGameNameEvent.create,
+            f"Edit::{ComponentKey.GAME_DESCRIPTION_FIELD}": EditGameDescriptionEvent.create,
+            f"Edit::{ComponentKey.GAME_PLATFORM_FIELD}": EditGamePlatformEvent.create,
+            f"Edit::{ComponentKey.GAME_GENRE_FIELD}": EditGameGenreEvent.create,
+            f"Edit::{ComponentKey.GAME_DEVELOPER_FIELD}": EditGameDeveloperEvent.create,
+            f"Edit::{ComponentKey.GAME_REGION_FIELD}": EditGameRegionEvent.create,
+            f"Edit::{ComponentKey.GAME_RELEASE_FIELD}": EditGameReleaseEvent.create,
+            f"Edit::{ComponentKey.GAME_CRC_FIELD}": EditGameCRCEvent.create,
+            # Clear
+            f"Clear::{ComponentKey.GAME_CART_BOX_IMAGE}": EditClearButtonPressed.create,
+            f"Clear::{ComponentKey.GAME_NAME_FIELD}": EditClearButtonPressed.create,
+            f"Clear::{ComponentKey.GAME_DESCRIPTION_FIELD}": EditClearButtonPressed.create,
+            f"Clear::{ComponentKey.GAME_PLATFORM_FIELD}": EditClearButtonPressed.create,
+            f"Clear::{ComponentKey.GAME_GENRE_FIELD}": EditClearButtonPressed.create,
+            f"Clear::{ComponentKey.GAME_DEVELOPER_FIELD}": EditClearButtonPressed.create,
+            f"Clear::{ComponentKey.GAME_REGION_FIELD}": EditClearButtonPressed.create,
+            f"Clear::{ComponentKey.GAME_RELEASE_FIELD}": EditClearButtonPressed.create,
+            f"Clear::{ComponentKey.GAME_CRC_FIELD}": EditClearButtonPressed.create,
+            # Apply
+            ComponentKey.EDIT_GAME_BOX_IMAGE_APPLY_BUTTON: EditApplyButtonPressed.create,
+            ComponentKey.EDIT_GAME_NAME_APPLY_BUTTON: EditApplyButtonPressed.create,
+            ComponentKey.EDIT_GAME_DESCRIPTION_APPLY_BUTTON: EditApplyButtonPressed.create,
+            ComponentKey.EDIT_GAME_PLATFORM_APPLY_BUTTON: EditApplyButtonPressed.create,
+            ComponentKey.EDIT_GAME_GENRE_APPLY_BUTTON: EditApplyButtonPressed.create,
+            ComponentKey.EDIT_GAME_DEVELOPER_APPLY_BUTTON: EditApplyButtonPressed.create,
+            ComponentKey.EDIT_GAME_REGION_APPLY_BUTTON: EditApplyButtonPressed.create,
+            ComponentKey.EDIT_GAME_RELEASE_APPLY_BUTTON: EditApplyButtonPressed.create,
+            ComponentKey.EDIT_GAME_CRC_APPLY_BUTTON: EditApplyButtonPressed.create,
             # Window
             sg.TIMEOUT_EVENT: WindowReadTimeoutEvent.create,  # not used anymore
             # TODO emit BackupSaveFileAfterPlayingCommand when app is closing (just in case)
@@ -702,6 +797,7 @@ class SgApp(App, LocalMemoryConfigurable):
     @classmethod
     def _convert_to_event_build_function_kwargs(
         cls,
+        key: ComponentKey,
         values: Any,
         event_build_function: Callable,
         context: AppContext,
@@ -716,17 +812,31 @@ class SgApp(App, LocalMemoryConfigurable):
             }
         if event_build_function == InputMemoryFolderButtonPressedEvent.create:
             return {"path_str": values.get(ComponentKey.INPUT_MEMORY_FOLDER, None)}
+        if event_build_function == ComboGBXFlasherPreferredModeUpdated.create:
+            return {
+                "mode": GBXFlasherMode.from_str(values.get(ComponentKey.GBX_FLASHER_PREFERRED_MODE_COMBO, None))
+            }
         if event_build_function in [PopUpWindowIsClosingEvent.create, EndSessionButtonPressedEvent.create]:
             return {
                 "play_window_is_closing": context.current_window == WindowType.PLAY,
                 "cart_info": context.cart_info,
                 "game_session_path": context.memory_path / Path("session"),
             }
+        if event_build_function in [InstallButtonPressedEvent.create, BackupButtonPressedEvent.create]:
+            return {"cart_info": context.cart_info}
         if event_build_function == UploadButtonPressedEvent.create:
             game_save = SgApp._get_game_save(context, values, ComponentKey.UPLOAD_SAVE_BOX_SAVE_NAMES_COMBO)
             return {"save_name": game_save.name if game_save else None}
         if event_build_function == OpenMemoryButtonPressedEvent.create:
             return {"memory_path": context.memory_path}
+        if event_build_function == EditApplyButtonPressed.create:
+            return {
+                "edit_type": cls._get_edit_type(key),
+                "value": next(iter(values.values())),
+                "cart_info": context.cart_info,
+            }
+        if event_build_function == EditClearButtonPressed.create:
+            return {"edit_type": cls._get_edit_type(key), "cart_info": context.cart_info}
 
         return {}
 
@@ -738,3 +848,28 @@ class SgApp(App, LocalMemoryConfigurable):
             return context.game_saves_list[save_rank - 1] if save_rank is not None else None
         except ValueError:  # no save to load
             return None
+
+    @staticmethod
+    def _get_edit_type(key: ComponentKey) -> Optional[EditWindowType]:
+        return {
+            # -- apply
+            ComponentKey.EDIT_GAME_BOX_IMAGE_APPLY_BUTTON: EditWindowType.GAME_BOX_IMAGE,
+            ComponentKey.EDIT_GAME_NAME_APPLY_BUTTON: EditWindowType.GAME_NAME,
+            ComponentKey.EDIT_GAME_DESCRIPTION_APPLY_BUTTON: EditWindowType.GAME_DESCRIPTION,
+            ComponentKey.EDIT_GAME_PLATFORM_APPLY_BUTTON: EditWindowType.GAME_PLATFORM,
+            ComponentKey.EDIT_GAME_GENRE_APPLY_BUTTON: EditWindowType.GAME_GENRE,
+            ComponentKey.EDIT_GAME_DEVELOPER_APPLY_BUTTON: EditWindowType.GAME_DEVELOPER,
+            ComponentKey.EDIT_GAME_REGION_APPLY_BUTTON: EditWindowType.GAME_REGION,
+            ComponentKey.EDIT_GAME_RELEASE_APPLY_BUTTON: EditWindowType.GAME_RELEASE,
+            ComponentKey.EDIT_GAME_CRC_APPLY_BUTTON: EditWindowType.GAME_CRC,
+            # -- clear
+            f"Clear::{ComponentKey.GAME_CART_BOX_IMAGE}": EditWindowType.GAME_BOX_IMAGE,
+            f"Clear::{ComponentKey.GAME_NAME_FIELD}": EditWindowType.GAME_NAME,
+            f"Clear::{ComponentKey.GAME_DESCRIPTION_FIELD}": EditWindowType.GAME_DESCRIPTION,
+            f"Clear::{ComponentKey.GAME_PLATFORM_FIELD}": EditWindowType.GAME_PLATFORM,
+            f"Clear::{ComponentKey.GAME_GENRE_FIELD}": EditWindowType.GAME_GENRE,
+            f"Clear::{ComponentKey.GAME_DEVELOPER_FIELD}": EditWindowType.GAME_DEVELOPER,
+            f"Clear::{ComponentKey.GAME_REGION_FIELD}": EditWindowType.GAME_REGION,
+            f"Clear::{ComponentKey.GAME_RELEASE_FIELD}": EditWindowType.GAME_RELEASE,
+            f"Clear::{ComponentKey.GAME_CRC_FIELD}": EditWindowType.GAME_CRC,
+        }.get(key, None)

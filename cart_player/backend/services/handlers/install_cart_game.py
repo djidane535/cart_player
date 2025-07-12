@@ -28,7 +28,14 @@ class InstallCartGameHandler(Handler):
 
     def _handle(self, cmd: InstallCartGameCommand):
         try:
+            # Check cart has not been swapped meanwhile
             cart_info: CartInfo = self._cart_flasher.read_cart_info()
+            if cmd.cart_info.header_checksum != cart_info.header_checksum:
+                logger.warning("Another game has been inserted meanwhile. Try again.")
+                self._publish(CartGameInstalledEvent(success=False))
+                return
+
+            cart_info = CartInfo.create(cmd.cart_info)
             content = self._cart_flasher.read_game(cart_info, self._report_progress)
         except (NoCartInCartFlasherException, RuntimeError) as e:
             logger.error(f"An error occurred when installing game: {e}", exc_info=True)
@@ -36,18 +43,7 @@ class InstallCartGameHandler(Handler):
         else:
             self._memory.save(cart_info, content, GameDataType.GAME)
             self._publish(
-                CartGameInstalledEvent(
-                    success=True,
-                    cart_info=CartInfoDTO(
-                        title=cart_info.title,
-                        header_checksum=cart_info.header_checksum,
-                        support=cart_info.support,
-                        region=cart_info.region,
-                        id_override=cart_info.id_override,
-                        save_supported=cart_info.save_supported,
-                        sgb_supported=cart_info.sgb_supported,
-                    ),
-                ),
+                CartGameInstalledEvent(success=True, cart_info=cmd.cart_info),
             )
 
     def _report_progress(self, current: float, eta: Optional[timedelta]):

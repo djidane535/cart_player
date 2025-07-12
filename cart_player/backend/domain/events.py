@@ -1,8 +1,17 @@
+from pathlib import Path
 from typing import List, Optional
 
 from pydantic import root_validator
 
-from cart_player.backend.domain.dtos import CartInfo, GameData, GameImage, GameMetadata, LocalMemoryConfiguration
+from cart_player.backend.domain.dtos import (
+    CartInfo,
+    GameData,
+    GameImage,
+    GameMetadata,
+    GBXFlasherConfiguration,
+    LocalMemoryConfiguration,
+)
+from cart_player.backend.utils.models import GameDataType
 from cart_player.core.domain.events import ProgressEvent
 from cart_player.core.domain.messages import BaseMessage
 
@@ -95,3 +104,20 @@ class CartDataReadEvent(CartOperationStatusEvent):
 
 class LocalMemoryConfigurationUpdatedEvent(BaseMessage):
     new_memory_configuration: LocalMemoryConfiguration
+
+class GBXFlasherConfigurationUpdatedEvent(BaseMessage):
+    new_flasher_configuration: GBXFlasherConfiguration
+
+
+class GameDataDeletedEvent(BaseMessage):
+    cart_info: CartInfo
+    type: GameDataType
+    field: Optional[str] = None
+
+
+class GameDataUpdatedEvent(BaseMessage):
+    cart_info: CartInfo
+    type: GameDataType
+    path: Optional[Path] = None
+    field: Optional[str] = None
+    text: Optional[str] = None

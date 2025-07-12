@@ -1,7 +1,7 @@
 import base64
 import os
 
-import PySimpleGUI as sg
+import FreeSimpleGUI as sg
 
 from cart_player.frontend.adapters.sg.utils.image import invert_colors
 from cart_player.frontend.resources.image import button_border_filepath

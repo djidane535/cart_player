@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from enum import Enum
+from typing import Optional
 
 
 class GameRegion(str, Enum):
@@ -44,8 +45,32 @@ class GameDataType(str, Enum):
     ANALOGUE_POCKET_IMAGE = "ANALOGUE_POCKET_IMAGE"
 
 
+class MemoryOnExistMode(str, Enum):
+    """Defines behaviour when trying to save already existing data."""
+
+    WARNING = "WARNING"
+    NOTHING = "NOTHING"
+
+
 class SaveDataOrigin(str, Enum):
     """Origin of save data."""
 
     CARTRIDGE = "CARTRIDGE"
     EMULATOR = "EMULATOR"
+
+class GBXFlasherMode(str, Enum):
+    DMG = "dmg"
+    AGB = "agb"
+
+    def from_str(s: str) -> Optional[GBXFlasherMode]:
+        for v in list(GBXFlasherMode):
+            if s in (v.value, v.prettify()):
+                return v
+        
+        return None
+
+    def prettify(self) -> str:
+        return {
+            GBXFlasherMode.DMG: "GameBoy / GameBoy Color",
+            GBXFlasherMode.AGB: "GameBoy Advance",
+        }[self]

@@ -8,6 +8,7 @@ from typing import Any, Dict, List, Optional
 
 from cart_player.core import config
 from cart_player.core.domain.events import UnexpectedErrorEvent
+from cart_player.frontend.domain.events import WindowReadNoWindowEvent
 
 from .channel import Channel, ChannelSubscriber
 from .handler import Handler
@@ -36,7 +37,8 @@ class Broker(ChannelSubscriber):
         Args:
             handler: Handler to register.
         """
-        self._message_handler_mapping[handler.message_type].append(handler)
+        for message_type in handler.messages_types:
+            self._message_handler_mapping[message_type].append(handler)
 
     def publish_and_execute(
         self,
@@ -64,7 +66,9 @@ class Broker(ChannelSubscriber):
             logger.info(f"[{str(self._id)}] None message received: message has been discarded.", exc_info=True)
             return
         self._channel.put(message)
-        logger.info(f"[{str(self._id)}] publish(): {message=}")
+
+        if not isinstance(message, WindowReadNoWindowEvent):
+            logger.info(f"[{str(self._id)}] publish(): {message=}")
 
     def execute(self, limit: Optional[int] = None, timeout: Optional[float] = None):
         """Process all messages until the limit or timeout has been reached.

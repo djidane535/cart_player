@@ -1,6 +1,6 @@
 from typing import List
 
-import PySimpleGUI as sg
+import FreeSimpleGUI as sg
 
 from .component_builders import ButtonBuilder, TextBuilder
 

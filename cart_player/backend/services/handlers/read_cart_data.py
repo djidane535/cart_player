@@ -2,10 +2,12 @@ import logging
 from typing import List, Type
 
 from cart_player.backend.domain.commands import ReadCartDataCommand
-from cart_player.backend.domain.dtos import CartInfo as CartInfoDTO
-from cart_player.backend.domain.dtos import GameData as GameDataDTO
-from cart_player.backend.domain.dtos import GameImage as GameImageDTO
-from cart_player.backend.domain.dtos import GameMetadata as GameMetadataDTO
+from cart_player.backend.domain.dtos import (
+    CartInfo as CartInfoDTO,
+    GameData as GameDataDTO,
+    GameImage as GameImageDTO,
+    GameMetadata as GameMetadataDTO,
+)
 from cart_player.backend.domain.events import CartDataReadEvent
 from cart_player.backend.domain.models import CartInfo, GameData, GameImage, GameMetadata
 from cart_player.backend.domain.ports import CartFlasher, GameLibrary, Memory
@@ -109,6 +111,7 @@ class ReadCartDataHandler(Handler):
         cart_info_dto = CartInfoDTO(
             title=cart_info.title,
             header_checksum=cart_info.header_checksum,
+            code=cart_info.code,
             support=cart_info.support,
             region=cart_info.region,
             id_override=cart_info.id_override,
@@ -174,8 +177,8 @@ class ReadCartDataHandler(Handler):
         success: bool,
         cart_info: CartInfoDTO,
         game_data_list: List[GameDataDTO],
-        game_metadata: GameMetadataDTO(),
-        game_image: GameImageDTO(),
+        game_metadata: GameMetadataDTO,
+        game_image: GameImageDTO,
     ) -> CartDataReadEvent:
         return CartDataReadEvent(
             success=success,
