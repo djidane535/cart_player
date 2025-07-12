@@ -22,7 +22,7 @@ REQUIRES_PYTHON = ">=3.9, <4"
 
 REQUIRED = [
     "Pillow==10.1.*",
-    "PySimpleGUI==5.0.*",
+    "FreeSimpleGUI==5.2.*",
     "easysettings==4.0.*",
     "pydantic==1.10.*",
     "rapidfuzz==2.13.*",
@@ -63,5 +63,5 @@ setup(
         "local_scheme": lambda *_: "",  # do not prepend dirty-related tag to version
         "write_to": os.path.join("./", PACKAGE.replace(".", "/"), "_version.py"),
     },
-    setup_requires=["setuptools_scm"],
+    setup_requires=["setuptools_scm"]
 )

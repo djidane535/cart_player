@@ -3,16 +3,16 @@ from collections import defaultdict
 from cart_player.backend.adapters.game_library.utils import LibretroMetadatField, LibretroMetadatParser
 from cart_player.backend.domain.models import CartInfo, GameMetadata
 from cart_player.backend.domain.ports import GameMetadataLibrary
+from cart_player.backend.resources import LIBRETRO_FOLDER_PATH
 from cart_player.backend.utils.models import GameSupport
 
-BASE_PATH = "./cart_player/backend/resources/libretro/libretro-database/metadat"
 LIBRETRO_METADAT_MAP = defaultdict()
 LIBRETRO_METADAT_MAP.update(
     {
-        LibretroMetadatField.GENRE: f"{BASE_PATH}/genre",
-        LibretroMetadatField.DEVELOPER: f"{BASE_PATH}/developer",
-        LibretroMetadatField.RELEASEYEAR: f"{BASE_PATH}/releaseyear",
-        LibretroMetadatField.CRC: f"{BASE_PATH}/developer",
+        LibretroMetadatField.GENRE: LIBRETRO_FOLDER_PATH / "genre",
+        LibretroMetadatField.DEVELOPER: LIBRETRO_FOLDER_PATH / "developer",
+        LibretroMetadatField.RELEASEYEAR: LIBRETRO_FOLDER_PATH / "releaseyear",
+        LibretroMetadatField.CRC: LIBRETRO_FOLDER_PATH / "developer",
     }
 )
 

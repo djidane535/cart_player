@@ -1,9 +1,8 @@
 from cart_player.backend.adapters.game_library.utils import LaunchboxMetadataParser
 from cart_player.backend.domain.models import CartInfo, GameMetadata
 from cart_player.backend.domain.ports import GameMetadataLibrary
+from cart_player.backend.resources import LAUNCHBOX_FOLDER_PATH
 from cart_player.backend.utils.models import GameSupport
-
-BASE_PATH = "./cart_player/backend/resources/launchbox"
 
 
 class LaunchboxMetadataLibrary(GameMetadataLibrary):
@@ -17,7 +16,7 @@ class LaunchboxMetadataLibrary(GameMetadataLibrary):
         support_filename = self._get_support_filename(cart_info.support)
 
         # Load text
-        filepath = f"{BASE_PATH}/{support_filename}"
+        filepath = LAUNCHBOX_FOLDER_PATH / f"{support_filename}"
         with open(filepath, "r", encoding="utf-8") as f:
             text = f.read()
 
