@@ -122,7 +122,7 @@ rmdir cart_player_build
 ## Credits
 
 - [lesserkuma](https://github.com/lesserkuma), creator of [FlashGBX](https://github.com/lesserkuma/FlashGBX) (thank you very much for your hard work).
-- [PySimpleGUI](https://www.pysimplegui.org), a cross-plateform UI for python programming.
+- [FreeSimpleGUI](https://freesimplegui.readthedocs.io/en/latest/), a cross-plateform UI for python programming.
 - [Freepik](https://www.flaticon.com/fr/icones-gratuites/dragon) for the design of the dragon on the app logo.
 
 *Project started on October 22nd, 2022*
