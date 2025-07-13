@@ -20,7 +20,7 @@ class PopUpWindowSelectorBuilder:
     def build() -> List[sg.Element]:
         """Return the organized list of components"""
         return [
-            ImageBuilder.build(app_icon_filepath, tooltip=f"CartPlayer v{__version__}"),
+            ImageBuilder.build(app_icon_filepath),
             ButtonBuilder.build_layout_selector_button(
                 "PLAY",
                 tooltip="Play to your game",
