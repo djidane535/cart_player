@@ -3,7 +3,6 @@ from typing import List
 import FreeSimpleGUI as sg
 
 from cart_player.frontend.resources import app_icon_filepath
-from version import __version__
 
 from .component_builders import ButtonBuilder, ComponentKey, ImageBuilder
 
