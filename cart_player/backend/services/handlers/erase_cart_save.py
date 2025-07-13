@@ -27,7 +27,14 @@ class EraseCartSaveHandler(Handler):
 
     def _handle(self, cmd: EraseCartSaveCommand):
         try:
+            # Check cart has not been swapped meanwhile
             cart_info: CartInfo = self._cart_flasher.read_cart_info()
+            if cmd.cart_info.header_checksum != cart_info.header_checksum:
+                logger.warning("Another game has been inserted meanwhile. Try again.")
+                self._publish(CartSaveErasedEvent(success=False))
+                return
+
+            cart_info = CartInfo.create(cmd.cart_info)
             self._cart_flasher.erase_save(cart_info, self._report_progress)
         except (NoCartInCartFlasherException, RuntimeError) as e:
             logger.error(f"An error occurred when erasing save: {e}", exc_info=True)

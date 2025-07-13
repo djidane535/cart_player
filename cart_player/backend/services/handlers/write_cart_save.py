@@ -32,7 +32,14 @@ class WriteCartSaveHandler(Handler):
             if save_data is None or save_data.content is None:
                 raise RuntimeError(f"No save data has been found ({cmd.save_name=})")
 
+            # Check cart has not been swapped meanwhile
             cart_info: CartInfo = self._cart_flasher.read_cart_info()
+            if cmd.cart_info.header_checksum != cart_info.header_checksum:
+                logger.warning("Another game has been inserted meanwhile. Try again.")
+                self._publish(CartSaveWrittenEvent(success=False))
+                return
+
+            cart_info = CartInfo.create(cmd.cart_info)
             self._cart_flasher.write_save(cart_info, save_data.content, self._report_progress)
         except (NoCartInCartFlasherException, RuntimeError) as e:
             logger.error(f"An error occurred when writing save: {e}", exc_info=True)

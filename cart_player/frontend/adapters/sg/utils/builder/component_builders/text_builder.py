@@ -4,6 +4,8 @@ from typing import Tuple, Union
 
 import FreeSimpleGUI as sg
 
+EDIT_TOOLTIP = "Right-click to edit"
+
 
 class TextBuilder:
     @staticmethod
@@ -22,9 +24,19 @@ class TextBuilder:
         right_click_menu = None if not len(click_menu_items) else ["", click_menu_items]
 
         return (
-            Text(content, key=key, right_click_menu=right_click_menu)
+            Text(
+                content, 
+                key=key, 
+                right_click_menu=right_click_menu, 
+                tooltip=EDIT_TOOLTIP if right_click_edit else None,
+            )
             if not editable
-            else InputText(content, key=key, right_click_menu=right_click_menu)
+            else InputText(
+                content, 
+                key=key, 
+                right_click_menu=right_click_menu, 
+                tooltip=EDIT_TOOLTIP if right_click_edit else None,
+            )
         )
 
 

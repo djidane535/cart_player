@@ -15,4 +15,4 @@ class UploadButtonPressedEventHandler(Handler):
 
     def _handle(self, evt: UploadButtonPressedEvent):
         self._publish(BeginProgressBarCommand())
-        self._publish(WriteCartSaveCommand(save_name=evt.save_name))
+        self._publish(WriteCartSaveCommand(cart_info=evt.cart_info, save_name=evt.save_name))

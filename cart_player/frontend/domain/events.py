@@ -168,10 +168,12 @@ class EditGameCRCEvent(EditEvent):
         return EditGameCRCEvent()
 
 class EraseButtonPressedEvent(BaseMessage):
+    cart_info: CartInfo
+
     @staticmethod
-    def create() -> Event:
+    def create(cart_info: CartInfo) -> Event:
         """Create an event based on event values returned by an sg.Window."""
-        return EraseButtonPressedEvent()
+        return EraseButtonPressedEvent(cart_info=cart_info)
 
 
 class EndSessionButtonPressedEvent(BaseMessage):
@@ -271,12 +273,13 @@ class SettingsSelectorButtonPressedEvent(BaseMessage):
 
 
 class UploadButtonPressedEvent(BaseMessage):
+    cart_info: CartInfo
     save_name: str
 
     @staticmethod
-    def create(save_name: str) -> Event:
+    def create(cart_info: CartInfo, save_name: str) -> Event:
         """Create an event based on event values returned by an sg.Window."""
-        return UploadButtonPressedEvent(save_name=save_name)
+        return UploadButtonPressedEvent(cart_info=cart_info, save_name=save_name)
 
 
 class WindowReadNoWindowEvent(BaseMessage):

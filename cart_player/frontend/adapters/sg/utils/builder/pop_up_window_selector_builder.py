@@ -3,6 +3,7 @@ from typing import List
 import FreeSimpleGUI as sg
 
 from cart_player.frontend.resources import app_icon_filepath
+from version import __version__
 
 from .component_builders import ButtonBuilder, ComponentKey, ImageBuilder
 
@@ -19,21 +20,21 @@ class PopUpWindowSelectorBuilder:
     def build() -> List[sg.Element]:
         """Return the organized list of components"""
         return [
-            ImageBuilder.build(app_icon_filepath),
+            ImageBuilder.build(app_icon_filepath, tooltip=f"CartPlayer v{__version__}"),
             ButtonBuilder.build_layout_selector_button(
                 "PLAY",
-                tooltip="Play to your game.",
+                tooltip="Play to your game",
                 key=ComponentKey.PLAY_SELECTOR_BUTTON,
             ),
             ButtonBuilder.build_layout_selector_button(
                 "DATA",
-                tooltip="Data management.",
+                tooltip="Data management",
                 key=ComponentKey.DATA_SELECTOR_BUTTON,
             ),
             sg.Push(),
             ButtonBuilder.build_layout_selector_button(
                 "SETTINGS",
-                tooltip="App settings.",
+                tooltip="App settings",
                 key=ComponentKey.SETTINGS_SELECTOR_BUTTON,
             ),
         ]

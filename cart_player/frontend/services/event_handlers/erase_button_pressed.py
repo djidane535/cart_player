@@ -15,4 +15,4 @@ class EraseButtonPressedEventHandler(Handler):
 
     def _handle(self, evt: EraseButtonPressedEvent):
         self._publish(BeginProgressBarCommand())
-        self._publish(EraseCartSaveCommand())
+        self._publish(EraseCartSaveCommand(cart_info=evt.cart_info))

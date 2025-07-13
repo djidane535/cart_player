@@ -85,4 +85,4 @@ class MockCartFlasher(CartFlasher):
         cart_info: CartInfo,
         report_progress_callback: Callable[[float, Optional[timedelta]], None],
     ):
-        raise NotImplementedError
+        self._write_save(cart_info, None, report_progress_callback)

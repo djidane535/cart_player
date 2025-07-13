@@ -6,6 +6,8 @@ import FreeSimpleGUI as sg
 
 from cart_player.frontend.adapters.sg.utils.image import put_image_into_square
 
+EDIT_TOOLTIP = "Right-click to edit"
+
 
 class ImageBuilder:
     @staticmethod
@@ -15,10 +17,11 @@ class ImageBuilder:
         key: str = None,
         right_click_edit: bool = False,
         right_click_clear: bool = False,
+        tooltip: str = None
     ) -> sg.Image:
         """Build image."""
         if square_size is None:
-            return sg.Image(filepath, pad=(15, 15), key=key)
+            return sg.Image(filepath, pad=(15, 15), key=key, tooltip=tooltip)
 
         with open(filepath, "rb") as f:
             data = base64.b64encode(f.read())
@@ -32,5 +35,9 @@ class ImageBuilder:
         right_click_menu = None if not len(click_menu_items) else ["", click_menu_items]
 
         return sg.Image(
-            data=squared_image_data, pad=(15, 15), key=key, right_click_menu=right_click_menu
+            data=squared_image_data,
+            pad=(15, 15),
+            key=key,
+            right_click_menu=right_click_menu,
+            tooltip=tooltip or (EDIT_TOOLTIP if right_click_edit else None),
         )

@@ -31,7 +31,7 @@ class DeleteGameDataFromMemoryCommand(BaseMessage):
 
 
 class EraseCartSaveCommand(BaseMessage):
-    pass
+    cart_info: CartInfo
 
 
 class ExportToAnaloguePocketLibraryCommand(BaseMessage):
@@ -92,4 +92,5 @@ class UpdateGBXFlasherConfigurationCommand(GBXFlasherConfiguration, BaseMessage)
 
 
 class WriteCartSaveCommand(BaseMessage):
+    cart_info: CartInfo
     save_name: str

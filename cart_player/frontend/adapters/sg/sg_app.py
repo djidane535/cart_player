@@ -824,7 +824,9 @@ class SgApp(App, LocalMemoryConfigurable):
             return {"cart_info": context.cart_info}
         if event_build_function == UploadButtonPressedEvent.create:
             game_save = SgApp._get_game_save(context, values, ComponentKey.UPLOAD_SAVE_BOX_SAVE_NAMES_COMBO)
-            return {"save_name": game_save.name if game_save else None}
+            return {"cart_info": context.cart_info, "save_name": game_save.name if game_save else None}
+        if event_build_function == EraseButtonPressedEvent.create:
+            return {"cart_info": context.cart_info}
         if event_build_function == OpenMemoryButtonPressedEvent.create:
             return {"memory_path": context.memory_path}
         if event_build_function == EditApplyButtonPressed.create:
